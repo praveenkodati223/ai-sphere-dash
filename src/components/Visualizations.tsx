@@ -67,38 +67,40 @@ const Visualizations = () => {
         </div>
       </div>
       
-      <TabsContent value="chart" className="mt-0 p-0">
-        <div className="p-4 h-[350px] flex items-center justify-center">
-          <ChartComponent type={selectedChart} />
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="data" className="mt-0 p-0">
-        <div className="h-[350px] overflow-auto px-4">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left p-2">Category</th>
-                <th className="text-left p-2">Q1</th>
-                <th className="text-left p-2">Q2</th>
-                <th className="text-left p-2">Q3</th>
-                <th className="text-left p-2">Q4</th>
-              </tr>
-            </thead>
-            <tbody>
-              {['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'].map((category, idx) => (
-                <tr key={idx} className="border-b border-white/5">
-                  <td className="p-2">{category}</td>
-                  <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                  <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                  <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                  <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+      <Tabs value={currentView} className="w-full">
+        <TabsContent value="chart" className="mt-0 p-0">
+          <div className="p-4 h-[350px] flex items-center justify-center">
+            <ChartComponent type={selectedChart} />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="data" className="mt-0 p-0">
+          <div className="h-[350px] overflow-auto px-4">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left p-2">Category</th>
+                  <th className="text-left p-2">Q1</th>
+                  <th className="text-left p-2">Q2</th>
+                  <th className="text-left p-2">Q3</th>
+                  <th className="text-left p-2">Q4</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </TabsContent>
+              </thead>
+              <tbody>
+                {['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'].map((category, idx) => (
+                  <tr key={idx} className="border-b border-white/5">
+                    <td className="p-2">{category}</td>
+                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
