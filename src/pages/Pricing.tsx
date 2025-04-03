@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, GraduationCap } from "lucide-react";
 
 const Pricing = () => {
   const plans = [
@@ -21,8 +21,25 @@ const Pricing = () => {
       buttonText: "Start Free"
     },
     {
+      name: "Student",
+      price: "0",
+      description: "Special plan for verified students",
+      features: [
+        "Up to 10 visualizations",
+        "Advanced chart types",
+        "CSV & Excel import",
+        "5GB storage",
+        "Email support",
+        "Academic datasets"
+      ],
+      recommended: false,
+      buttonText: "Verify Student Status",
+      badge: "Student",
+      icon: <GraduationCap className="h-5 w-5" />
+    },
+    {
       name: "Pro",
-      price: "29",
+      price: "19",
       description: "Advanced features for professionals and small teams",
       features: [
         "Unlimited visualizations",
@@ -38,7 +55,7 @@ const Pricing = () => {
     },
     {
       name: "Enterprise",
-      price: "99",
+      price: "49",
       description: "Everything you need for large teams and organizations",
       features: [
         "Everything in Pro",
@@ -69,7 +86,7 @@ const Pricing = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {plans.map((plan, index) => (
               <div 
                 key={index} 
@@ -80,6 +97,13 @@ const Pricing = () => {
                 {plan.recommended && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-sphere-purple to-sphere-cyan px-4 py-1 rounded-full text-sm font-medium">
                     Recommended
+                  </div>
+                )}
+                
+                {plan.badge && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                    {plan.icon}
+                    {plan.badge}
                   </div>
                 )}
                 
@@ -103,7 +127,9 @@ const Pricing = () => {
                   className={`w-full ${
                     plan.recommended 
                       ? 'bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90' 
-                      : 'bg-white/10 hover:bg-white/20'
+                      : plan.name === 'Student'
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90'
+                        : 'bg-white/10 hover:bg-white/20'
                   }`}
                 >
                   {plan.buttonText}
