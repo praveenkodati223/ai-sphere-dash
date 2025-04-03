@@ -2,6 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import ChartComponent from "./ChartComponent";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Hero = () => {
   return (
@@ -30,10 +32,6 @@ const Hero = () => {
         
         <div className="glass p-4 rounded-2xl shadow-2xl shadow-sphere-purple/10 border border-white/10 overflow-hidden max-w-5xl mx-auto">
           <div className="aspect-video relative bg-sphere-dark rounded-xl overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-xl text-slate-300">Interactive Dashboard Preview</p>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-sphere-dark to-transparent"></div>
             <div className="absolute top-4 left-4 right-4 h-8 flex items-center">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -44,6 +42,48 @@ const Hero = () => {
                 sphere-ai.dashboard/analytics
               </div>
             </div>
+            
+            {/* Interactive Dashboard Preview Content */}
+            <div className="mt-8 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-white">Sales Dashboard</h3>
+                <div className="flex gap-2">
+                  <Tabs defaultValue="charts" className="w-[200px]">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="charts" className="text-xs">Charts</TabsTrigger>
+                      <TabsTrigger value="tables" className="text-xs">Tables</TabsTrigger>
+                      <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="glass p-3 rounded-lg">
+                  <div className="h-[130px]">
+                    <ChartComponent type="bar" />
+                  </div>
+                  <p className="text-xs text-center mt-2 text-slate-300">Revenue by Category</p>
+                </div>
+                <div className="glass p-3 rounded-lg">
+                  <div className="h-[130px]">
+                    <ChartComponent type="line" />
+                  </div>
+                  <p className="text-xs text-center mt-2 text-slate-300">Monthly Growth</p>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <div className="glass p-3 rounded-lg">
+                  <div className="h-[100px]">
+                    <ChartComponent type="area" />
+                  </div>
+                  <p className="text-xs text-center mt-2 text-slate-300">Yearly Performance</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-sphere-dark to-transparent"></div>
           </div>
         </div>
       </div>
