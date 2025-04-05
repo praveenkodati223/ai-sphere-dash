@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   AreaChart,
@@ -35,7 +34,6 @@ import { ChartContainer, ChartTooltipContent, ChartTooltip, ChartLegend } from "
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-// Sample data for special charts
 const scatterData = [
   { x: 100, y: 200, z: 200, name: 'Group A' },
   { x: 120, y: 100, z: 260, name: 'Group B' },
@@ -93,7 +91,6 @@ interface ChartComponentProps {
 const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
   const { activeDataset, analyzedData } = useVisualization();
   
-  // Transform data for charts
   const chartData = React.useMemo(() => {
     if (!activeDataset) {
       return [
@@ -119,11 +116,9 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
     }));
   }, [activeDataset]);
 
-  // Special data formats for different chart types
   const treemapData = React.useMemo(() => {
     if (!activeDataset) return [];
     
-    // Group by category and subCategory
     const result = [];
     activeDataset.data.forEach(item => {
       const existing = result.find(r => r.name === item.category);
@@ -161,11 +156,9 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
     });
   }, [activeDataset]);
   
-  // Generate funnel data based on categories
   const funnelData = React.useMemo(() => {
     if (!activeDataset) return [];
     
-    // Sort by value in descending order
     return [...chartData]
       .sort((a, b) => b.value - a.value)
       .map((item, index) => ({
@@ -175,7 +168,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
       }));
   }, [chartData]);
 
-  // KPI calculation
   const kpiValue = React.useMemo(() => {
     if (!activeDataset || !analyzedData) return { value: 0, target: 0 };
     
@@ -202,6 +194,49 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
           </p>
         ))}
       </div>
+    );
+  };
+
+  const CustomTreemapContent = (props: any) => {
+    const { root, depth, x, y, width, height, index, name } = props;
+    
+    return (
+      <g>
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          style={{
+            fill: COLORS[index % COLORS.length],
+            stroke: '#fff',
+            strokeWidth: 2 / (depth + 1e-10),
+            strokeOpacity: 1 / (depth + 1e-10),
+          }}
+        />
+        {depth === 1 ? (
+          <text
+            x={x + width / 2}
+            y={y + height / 2 + 7}
+            textAnchor="middle"
+            fill="#fff"
+            fontSize={14}
+          >
+            {name}
+          </text>
+        ) : null}
+        {depth === 1 ? (
+          <text
+            x={x + 4}
+            y={y + 18}
+            fill="#fff"
+            fontSize={16}
+            fillOpacity={0.9}
+          >
+            {index + 1}
+          </text>
+        ) : null}
+      </g>
     );
   };
 
@@ -482,46 +517,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             ratio={4/3}
             stroke="#fff"
             fill="#8884d8"
-            content={({ root, depth, x, y, width, height, index, payload, colors, rank, name }) => {
-              return (
-                <g>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    style={{
-                      fill: COLORS[index % COLORS.length],
-                      stroke: '#fff',
-                      strokeWidth: 2 / (depth + 1e-10),
-                      strokeOpacity: 1 / (depth + 1e-10),
-                    }}
-                  />
-                  {depth === 1 ? (
-                    <text
-                      x={x + width / 2}
-                      y={y + height / 2 + 7}
-                      textAnchor="middle"
-                      fill="#fff"
-                      fontSize={14}
-                    >
-                      {name}
-                    </text>
-                  ) : null}
-                  {depth === 1 ? (
-                    <text
-                      x={x + 4}
-                      y={y + 18}
-                      fill="#fff"
-                      fontSize={16}
-                      fillOpacity={0.9}
-                    >
-                      {index + 1}
-                    </text>
-                  ) : null}
-                </g>
-              );
-            }}
+            content={<CustomTreemapContent />}
           />
         </ResponsiveContainer>
       );
