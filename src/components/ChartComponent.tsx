@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   AreaChart,
@@ -514,7 +515,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
           <Treemap
             data={treemapData}
             dataKey="size"
-            ratio={4/3}
+            aspectRatio={4/3}
             stroke="#fff"
             fill="#8884d8"
             content={<CustomTreemapContent />}
