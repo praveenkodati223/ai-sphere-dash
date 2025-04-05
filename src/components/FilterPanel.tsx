@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -12,10 +12,30 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useVisualization } from '@/contexts/VisualizationContext';
+import { toast } from "sonner";
 
 const FilterPanel = () => {
-  const [dateRange, setDateRange] = useState<[number, number]>([30, 90]);
-  const [showOutliers, setShowOutliers] = useState<boolean>(false);
+  const { dateRange, setDateRange } = useVisualization();
+  const [showOutliers, setShowOutliers] = React.useState<boolean>(false);
+  const [minValue, setMinValue] = React.useState<string>('0');
+  const [maxValue, setMaxValue] = React.useState<string>('1000');
+  const [category, setCategory] = React.useState<string>('all');
+  const [region, setRegion] = React.useState<string>('all');
+  
+  const handleReset = () => {
+    setShowOutliers(false);
+    setMinValue('0');
+    setMaxValue('1000');
+    setCategory('all');
+    setRegion('all');
+    setDateRange([30, 90]);
+    toast.success("Filters reset to default");
+  };
+  
+  const handleApply = () => {
+    toast.success("Filters applied successfully");
+  };
   
   return (
     <div className="glass p-6 rounded-lg space-y-5">
@@ -24,7 +44,7 @@ const FilterPanel = () => {
       <div className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
-          <Select defaultValue="all">
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id="category">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -40,7 +60,7 @@ const FilterPanel = () => {
         
         <div className="space-y-2">
           <Label htmlFor="region">Region</Label>
-          <Select defaultValue="all">
+          <Select value={region} onValueChange={setRegion}>
             <SelectTrigger id="region">
               <SelectValue placeholder="Select region" />
             </SelectTrigger>
@@ -72,12 +92,24 @@ const FilterPanel = () => {
         
         <div className="space-y-2">
           <Label htmlFor="min-value">Minimum Value</Label>
-          <Input id="min-value" type="number" placeholder="0" />
+          <Input 
+            id="min-value" 
+            type="number" 
+            placeholder="0"
+            value={minValue}
+            onChange={(e) => setMinValue(e.target.value)}
+          />
         </div>
         
         <div className="space-y-2">
           <Label htmlFor="max-value">Maximum Value</Label>
-          <Input id="max-value" type="number" placeholder="1000" />
+          <Input 
+            id="max-value" 
+            type="number" 
+            placeholder="1000"
+            value={maxValue}
+            onChange={(e) => setMaxValue(e.target.value)}
+          />
         </div>
         
         <div className="flex items-center space-x-2">
@@ -93,11 +125,13 @@ const FilterPanel = () => {
           <Button 
             variant="outline" 
             className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 w-1/2"
+            onClick={handleReset}
           >
             Reset
           </Button>
           <Button 
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 w-1/2"
+            onClick={handleApply}
           >
             Apply
           </Button>

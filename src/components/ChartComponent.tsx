@@ -24,17 +24,9 @@ import {
   Cell,
   Legend
 } from 'recharts';
+import { useVisualization } from '@/contexts/VisualizationContext';
 
-// Sample data
-const sampleData = [
-  { name: 'Jan', value: 400, category: 'Electronics' },
-  { name: 'Feb', value: 300, category: 'Clothing' },
-  { name: 'Mar', value: 600, category: 'Food' },
-  { name: 'Apr', value: 800, category: 'Home' },
-  { name: 'May', value: 500, category: 'Electronics' },
-  { name: 'Jun', value: 900, category: 'Clothing' },
-];
-
+// Sample data for scatter and radar charts
 const scatterData = [
   { x: 100, y: 200, z: 200 },
   { x: 120, y: 100, z: 260 },
@@ -90,11 +82,37 @@ interface ChartComponentProps {
 }
 
 const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
+  const { activeDataset } = useVisualization();
+  
+  // Transform data for charts
+  const chartData = React.useMemo(() => {
+    if (!activeDataset) {
+      return [
+        { name: 'Jan', value: 400, category: 'Electronics' },
+        { name: 'Feb', value: 300, category: 'Clothing' },
+        { name: 'Mar', value: 600, category: 'Food' },
+        { name: 'Apr', value: 800, category: 'Home' },
+        { name: 'May', value: 500, category: 'Electronics' },
+        { name: 'Jun', value: 900, category: 'Clothing' },
+      ];
+    }
+    
+    return activeDataset.data.map(item => ({
+      name: item.category,
+      value: item.q1 + item.q2 + item.q3 + item.q4,
+      q1: item.q1,
+      q2: item.q2,
+      q3: item.q3,
+      q4: item.q4,
+      category: item.category
+    }));
+  }, [activeDataset]);
+  
   switch(type) {
     case 'bar':
       return (
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sampleData}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis dataKey="name" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
@@ -104,7 +122,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             />
             <Legend />
             <Bar dataKey="value" name="Sales" fill="#8b5cf6">
-              {sampleData.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>
@@ -115,7 +133,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
     case 'line':
       return (
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sampleData}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis dataKey="name" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
@@ -142,7 +160,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={sampleData}
+              data={chartData}
               cx="50%"
               cy="50%"
               labelLine={false}
@@ -152,7 +170,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
               dataKey="value"
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
-              {sampleData.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -168,7 +186,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
     case 'area':
       return (
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={sampleData}>
+          <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis dataKey="name" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />

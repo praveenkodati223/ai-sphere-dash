@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useVisualization } from '@/contexts/VisualizationContext';
 
 const DataImport = () => {
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [apiUrl, setApiUrl] = useState<string>('');
+  const { importSampleData } = useVisualization();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -28,15 +31,36 @@ const DataImport = () => {
       toast.success(`Successfully imported ${fileName}`);
       setIsUploading(false);
       setFileName('');
+      
+      // Generate a random dataset
+      importSampleData('sales-data');
     }, 1500);
   };
   
-  const handleSampleData = () => {
+  const handleApiConnect = () => {
+    if (!apiUrl) {
+      toast.error("Please enter an API URL");
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    // Simulate API connection
+    setTimeout(() => {
+      toast.success("Successfully connected to API");
+      setIsUploading(false);
+      
+      // Generate a random dataset
+      importSampleData('web-analytics');
+    }, 1500);
+  };
+  
+  const handleSampleDataLoad = (datasetId: string) => {
     setIsUploading(true);
     
     // Simulate loading sample data
     setTimeout(() => {
-      toast.success("Sample data loaded successfully");
+      importSampleData(datasetId);
       setIsUploading(false);
     }, 1000);
   };
@@ -84,12 +108,16 @@ const DataImport = () => {
           <div className="flex gap-4">
             <Input 
               type="text" 
-              placeholder="Enter API URL or data source link" 
+              placeholder="Enter API URL or data source link"
+              value={apiUrl}
+              onChange={(e) => setApiUrl(e.target.value)}
               className="flex-1"
             />
             <Button 
               variant="outline" 
               className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+              disabled={isUploading}
+              onClick={handleApiConnect}
             >
               Connect
             </Button>
@@ -105,7 +133,8 @@ const DataImport = () => {
             <Button
               variant="outline" 
               className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 h-auto p-4 justify-start"
-              onClick={handleSampleData}
+              onClick={() => handleSampleDataLoad('sales-data')}
+              disabled={isUploading}
             >
               <div className="text-left">
                 <div className="font-medium">Sales Data</div>
@@ -116,7 +145,8 @@ const DataImport = () => {
             <Button
               variant="outline" 
               className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 h-auto p-4 justify-start"
-              onClick={handleSampleData}
+              onClick={() => handleSampleDataLoad('web-analytics')}
+              disabled={isUploading}
             >
               <div className="text-left">
                 <div className="font-medium">Website Analytics</div>

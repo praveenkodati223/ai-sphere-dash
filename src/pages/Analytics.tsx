@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '../components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Visualizations from '../components/Visualizations';
 import AIPrompt from '../components/AIPrompt';
 import FilterPanel from '../components/FilterPanel';
+import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Analytics = () => {
-  const [analysisType, setAnalysisType] = useState('trends');
+  const [analysisType, setAnalysisType] = React.useState('trends');
+  const { activeDataset } = useVisualization();
   
   return (
     <div className="min-h-screen bg-sphere-dark">
@@ -19,6 +21,7 @@ const Analytics = () => {
             <h1 className="text-3xl font-bold mb-2">Advanced Analytics</h1>
             <p className="text-slate-300">
               Explore your data with in-depth analysis tools and AI-powered insights
+              {activeDataset && <span> · Currently analyzing: <span className="text-sphere-cyan">{activeDataset.name}</span></span>}
             </p>
           </div>
           

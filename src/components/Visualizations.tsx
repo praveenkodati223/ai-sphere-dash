@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -11,10 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ChartComponent from "./ChartComponent";
+import { useVisualization } from '@/contexts/VisualizationContext';
+import { toast } from "sonner";
 
 const Visualizations = () => {
-  const [selectedChart, setSelectedChart] = useState('bar');
-  const [currentView, setCurrentView] = useState('chart');
+  const { 
+    selectedChart, 
+    setSelectedChart, 
+    currentView, 
+    setCurrentView,
+    activeDataset 
+  } = useVisualization();
   
   const chartTypes = [
     { id: 'bar', name: 'Bar Chart' },
@@ -24,6 +31,10 @@ const Visualizations = () => {
     { id: 'scatter', name: 'Scatter Plot' },
     { id: 'radar', name: 'Radar Chart' },
   ];
+  
+  const handleCustomChartBuilder = () => {
+    toast.info("Custom Chart Builder coming soon!");
+  };
   
   return (
     <div className="glass rounded-lg overflow-hidden">
@@ -51,7 +62,10 @@ const Visualizations = () => {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem className="cursor-pointer hover:bg-sphere-cyan/10">
+                <DropdownMenuItem 
+                  className="cursor-pointer hover:bg-sphere-cyan/10"
+                  onClick={handleCustomChartBuilder}
+                >
                   Custom Chart Builder
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -87,15 +101,27 @@ const Visualizations = () => {
                 </tr>
               </thead>
               <tbody>
-                {['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'].map((category, idx) => (
-                  <tr key={idx} className="border-b border-white/5">
-                    <td className="p-2">{category}</td>
-                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                    <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                  </tr>
-                ))}
+                {activeDataset ? (
+                  activeDataset.data.map((item, idx) => (
+                    <tr key={idx} className="border-b border-white/5">
+                      <td className="p-2">{item.category}</td>
+                      <td className="p-2">{item.q1}</td>
+                      <td className="p-2">{item.q2}</td>
+                      <td className="p-2">{item.q3}</td>
+                      <td className="p-2">{item.q4}</td>
+                    </tr>
+                  ))
+                ) : (
+                  ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'].map((category, idx) => (
+                    <tr key={idx} className="border-b border-white/5">
+                      <td className="p-2">{category}</td>
+                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

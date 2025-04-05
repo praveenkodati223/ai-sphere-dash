@@ -4,8 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import ChartComponent from "./ChartComponent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+  
+  const handleStartVisualize = () => {
+    navigate('/analytics');
+  };
+  
   return (
     <section className="min-h-screen pt-24 pb-16 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-sphere-purple/20 to-transparent blur-3xl"></div>
@@ -20,11 +27,17 @@ const Hero = () => {
             Sphere AI transforms your raw data into meaningful insights. Upload your datasets, explore with intuitive visualizations, or simply ask our AI to analyze your data for you.
           </p>
           <div className="flex gap-4 justify-center mb-16">
-            <Button className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 px-8 py-6 text-lg">
+            <Button 
+              className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 px-8 py-6 text-lg"
+              onClick={handleStartVisualize}
+            >
               Start Visualizing
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 px-8 py-6 text-lg">
+            <Button 
+              variant="outline" 
+              className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 px-8 py-6 text-lg"
+            >
               Watch Demo
             </Button>
           </div>
