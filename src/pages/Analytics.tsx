@@ -1,15 +1,24 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '../components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import Visualizations from '../components/Visualizations';
 import AIPrompt from '../components/AIPrompt';
 import FilterPanel from '../components/FilterPanel';
 import { useVisualization } from '@/contexts/VisualizationContext';
+import { sampleDatasets } from '@/services/dataService';
 
 const Analytics = () => {
   const [analysisType, setAnalysisType] = React.useState('trends');
-  const { activeDataset } = useVisualization();
+  const { activeDataset, importSampleData } = useVisualization();
+  
+  // Auto-import data if none is loaded yet
+  useEffect(() => {
+    if (!activeDataset && sampleDatasets.length > 0) {
+      importSampleData(sampleDatasets[0].id);
+    }
+  }, [activeDataset, importSampleData]);
   
   return (
     <div className="min-h-screen bg-sphere-dark">
@@ -38,6 +47,30 @@ const Analytics = () => {
                 <div className="space-y-6">
                   <FilterPanel />
                   <AIPrompt />
+                  
+                  {/* Data Selection */}
+                  <div className="glass p-4 rounded-lg">
+                    <h3 className="font-semibold mb-4 flex items-center">
+                      <span className="text-sphere-cyan mr-2">•</span>
+                      Available Datasets
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {sampleDatasets.map((dataset) => (
+                        <Button
+                          key={dataset.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => importSampleData(dataset.id)}
+                          className={`w-full justify-start text-left border-sphere-cyan/30 hover:border-sphere-cyan hover:bg-sphere-cyan/10 ${
+                            activeDataset?.id === dataset.id ? 'border-sphere-cyan bg-sphere-cyan/10' : ''
+                          }`}
+                        >
+                          {dataset.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
               
