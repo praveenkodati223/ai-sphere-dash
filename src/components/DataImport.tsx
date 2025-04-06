@@ -12,7 +12,7 @@ const DataImport = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>('');
   const [datasetName, setDatasetName] = useState<string>('');
-  const { importSampleData, clearDatasets, analyzeData } = useVisualization();
+  const { importSampleData, clearDatasets, analyzeData, setAnalysisType } = useVisualization();
   const navigate = useNavigate();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,8 +49,11 @@ const DataImport = () => {
       setFileName('');
       setDatasetName('');
       
-      // Navigate to trends analysis section
-      navigate('/analytics');
+      // Set the analysis type to trends by default
+      setAnalysisType('trends');
+      
+      // Navigate to analytics page and force a refresh
+      navigate('/analytics?refresh=' + Date.now());
     }, 1500);
   };
   
@@ -77,8 +80,11 @@ const DataImport = () => {
         setIsUploading(false);
         setApiUrl('');
         
-        // Navigate to trends analysis section
-        navigate('/analytics');
+        // Set the analysis type to trends by default
+        setAnalysisType('trends');
+        
+        // Navigate to analytics page and force a refresh
+        navigate('/analytics?refresh=' + Date.now());
       } catch (error) {
         toast.error("Invalid URL format");
         setIsUploading(false);
@@ -97,8 +103,11 @@ const DataImport = () => {
       importSampleData(datasetId);
       setIsUploading(false);
       
-      // Navigate to trends analysis section
-      navigate('/analytics');
+      // Set the analysis type to trends by default
+      setAnalysisType('trends');
+      
+      // Navigate to analytics page and force a refresh
+      navigate('/analytics?refresh=' + Date.now());
     }, 1000);
   };
   

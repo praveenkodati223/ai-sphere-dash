@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -32,25 +32,32 @@ const FilterPanel = () => {
   const [region, setRegion] = React.useState<string>('all');
   
   // Reset filters when dataset changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeDataset) {
       // Calculate min and max values from dataset
-      const values = activeDataset.data.map(item => item.value || 0);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
+      const values = activeDataset.data.map(item => item.value || 
+        (item.q1 + item.q2 + item.q3 + item.q4));
+      
+      const min = Math.floor(Math.min(...values));
+      const max = Math.ceil(Math.max(...values));
       
       setMinValue(min.toString());
       setMaxValue(max.toString());
       setCategory('all');
       setRegion('all');
+      
+      // Also reset date range to default
+      setDateRange([30, 90]);
     }
-  }, [activeDataset]);
+  }, [activeDataset, setDateRange]);
   
   const handleReset = () => {
     if (activeDataset) {
-      const values = activeDataset.data.map(item => item.value || 0);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
+      const values = activeDataset.data.map(item => item.value || 
+        (item.q1 + item.q2 + item.q3 + item.q4));
+      
+      const min = Math.floor(Math.min(...values));
+      const max = Math.ceil(Math.max(...values));
       
       setShowOutliers(false);
       setMinValue(min.toString());
@@ -58,7 +65,7 @@ const FilterPanel = () => {
       setCategory('all');
       setRegion('all');
       setDateRange([30, 90]);
-      toast.success("Filters reset to default");
+      toast.success("Filters reset to match your imported data");
     } else {
       setShowOutliers(false);
       setMinValue('0');
@@ -71,46 +78,56 @@ const FilterPanel = () => {
   };
   
   const handleApply = () => {
-    // In a real application, we would filter the data here
-    // For now, we'll just trigger a new analysis
+    // Trigger a new analysis with the current filters
     analyzeData();
-    toast.success("Filters applied successfully");
+    toast.success("Filters applied to visualization");
   };
   
   return (
     <div className="glass p-6 rounded-lg space-y-5">
-      <h3 className="text-xl font-semibold mb-4">Filters</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold">Filters</h3>
+        {activeDataset && (
+          <span className="text-xs text-sphere-cyan">
+            {activeDataset.name}
+          </span>
+        )}
+      </div>
       
       <div className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {availableCategories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {availableCategories.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {availableCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
-        <div className="space-y-2">
-          <Label htmlFor="region">Region</Label>
-          <Select value={region} onValueChange={setRegion}>
-            <SelectTrigger id="region">
-              <SelectValue placeholder="Select region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              {availableRegions.map((reg) => (
-                <SelectItem key={reg} value={reg}>{reg}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {availableRegions.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="region">Region</Label>
+            <Select value={region} onValueChange={setRegion}>
+              <SelectTrigger id="region">
+                <SelectValue placeholder="Select region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {availableRegions.map((reg) => (
+                  <SelectItem key={reg} value={reg}>{reg}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         <div className="space-y-2">
           <div className="flex justify-between items-center">

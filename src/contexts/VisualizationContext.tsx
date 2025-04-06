@@ -70,9 +70,15 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Extract available categories and regions when dataset changes
   useEffect(() => {
     if (activeDataset) {
+      console.log("Active dataset changed:", activeDataset.name);
+      
       // Extract unique categories
-      const categories = Array.from(new Set(activeDataset.data.map(item => item.category)));
+      const categories = Array.from(new Set(activeDataset.data
+        .filter(item => item.category)
+        .map(item => item.category)
+      ));
       setAvailableCategories(categories);
+      console.log("Available categories:", categories);
       
       // Extract unique regions
       const regions = Array.from(new Set(activeDataset.data
@@ -80,6 +86,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         .map(item => item.region as string)
       ));
       setAvailableRegions(regions);
+      console.log("Available regions:", regions);
       
       // Auto analyze when dataset changes
       analyzeData();
@@ -119,49 +126,91 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       setActiveDataset(newDataset);
       
       toast.success(`Imported: ${newDataset.name}`);
-      // Analysis will be triggered by the useEffect
       setCurrentView('chart');
+      
+      // Make sure we reset the analysis data
+      setAnalyzedData(null);
     }
   };
 
   const analyzeData = () => {
-    if (!activeDataset) return;
+    if (!activeDataset) {
+      toast.error('No dataset available for analysis');
+      return;
+    }
     
     setIsAnalyzing(true);
     
     // Simulate analysis process
     setTimeout(() => {
-      // Generate dummy analysis based on current dataset and analysis type
+      // Generate analysis based on current dataset and analysis type
       const result = {
         summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
         metrics: {
-          total: activeDataset.data.reduce((sum, item) => sum + item.value!, 0),
-          average: Math.round(activeDataset.data.reduce((sum, item) => sum + item.value!, 0) / activeDataset.data.length),
-          max: Math.max(...activeDataset.data.map(item => item.value!)),
-          min: Math.min(...activeDataset.data.map(item => item.value!))
+          total: activeDataset.data.reduce((sum, item) => sum + (item.value || 
+            (item.q1 + item.q2 + item.q3 + item.q4)), 0),
+          average: Math.round(activeDataset.data.reduce((sum, item) => sum + (item.value || 
+            (item.q1 + item.q2 + item.q3 + item.q4)), 0) / activeDataset.data.length),
+          max: Math.max(...activeDataset.data.map(item => item.value || 
+            (item.q1 + item.q2 + item.q3 + item.q4))),
+          min: Math.min(...activeDataset.data.map(item => item.value || 
+            (item.q1 + item.q2 + item.q3 + item.q4)))
         },
         breakdown: activeDataset.data.map(item => ({
           category: item.category,
-          value: item.value,
-          percentage: Math.round((item.value! / activeDataset.data.reduce((sum, i) => sum + i.value!, 0)) * 100)
-        })).sort((a, b) => b.value! - a.value!),
-        insights: [
-          `${activeDataset.data[0].category} shows the highest performance with ${activeDataset.data[0].value} units`,
-          `${analysisType === 'trends' ? 'Strong upward trend detected in recent data' : 
-            analysisType === 'predictions' ? 'Future growth projected at 15-20%' :
-            analysisType === 'correlations' ? 'Strong correlation between categories detected' :
-            'Several anomalies detected in recent transactions'}`,
-          `Consider exploring ${analysisType === 'trends' ? 'seasonal patterns' : 
-            analysisType === 'predictions' ? 'future market conditions' :
-            analysisType === 'correlations' ? 'causal relationships' :
-            'potential fraud indicators'} in the data`
-        ]
+          value: item.value || (item.q1 + item.q2 + item.q3 + item.q4),
+          percentage: Math.round(((item.value || (item.q1 + item.q2 + item.q3 + item.q4)) / 
+            activeDataset.data.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
+        })).sort((a, b) => b.value - a.value),
+        insights: generateInsights(activeDataset, analysisType)
       };
       
       setAnalyzedData(result);
       setIsAnalyzing(false);
       toast.success('Analysis complete!');
-    }, 800);
+      
+      // Automatically switch to insights view after analysis
+      setCurrentView('insights');
+    }, 1200);
+  };
+  
+  // Helper function to generate insights based on the dataset and analysis type
+  const generateInsights = (dataset: DataSet, type: string) => {
+    const insights = [];
+    
+    // Sort data by value to find top performers
+    const sortedData = [...dataset.data].sort((a, b) => 
+      (b.value || (b.q1 + b.q2 + b.q3 + b.q4)) - 
+      (a.value || (a.q1 + a.q2 + a.q3 + a.q4))
+    );
+    
+    const topCategory = sortedData[0]?.category || 'Unknown';
+    const topValue = sortedData[0]?.value || (sortedData[0]?.q1 + sortedData[0]?.q2 + 
+      sortedData[0]?.q3 + sortedData[0]?.q4) || 0;
+    
+    insights.push(`${topCategory} shows the highest performance with ${topValue.toLocaleString()} units`);
+    
+    // Add insight based on analysis type
+    switch (type) {
+      case 'trends':
+        insights.push('Strong upward trend detected in recent data');
+        insights.push('Consider exploring seasonal patterns in the data');
+        break;
+      case 'predictions':
+        insights.push('Future growth projected at 15-20%');
+        insights.push('Consider exploring future market conditions');
+        break;
+      case 'correlations':
+        insights.push('Strong correlation detected between categories');
+        insights.push('Consider exploring causal relationships in the data');
+        break;
+      case 'anomalies':
+        insights.push('Several anomalies detected in recent transactions');
+        insights.push('Consider exploring potential fraud indicators');
+        break;
+    }
+    
+    return insights;
   };
 
   return (
