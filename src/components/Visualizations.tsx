@@ -52,6 +52,10 @@ const Visualizations = () => {
     }
   }, [activeDataset, analyzedData]);
   
+  // Create a fallback for sample data in case sampleCategories is not available
+  const fallbackCategories = ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'];
+  const categories = sampleCategories || fallbackCategories;
+  
   const chartGroups = [
     {
       label: 'Bar & Column',
@@ -220,7 +224,7 @@ const Visualizations = () => {
                     );
                   })
                 ) : (
-                  sampleCategories.map((category, idx) => (
+                  categories.map((category, idx) => (
                     <tr key={idx} className="border-b border-white/5">
                       <td className="p-2">{category}</td>
                       <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
@@ -325,4 +329,3 @@ const Visualizations = () => {
 };
 
 export default Visualizations;
-
