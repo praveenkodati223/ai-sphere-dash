@@ -31,6 +31,7 @@ import {
 import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
+import { sampleCategories } from '@/services/dataService';
 
 const Visualizations = () => {
   const { 
@@ -324,3 +325,4 @@ const Visualizations = () => {
 };
 
 export default Visualizations;
+
