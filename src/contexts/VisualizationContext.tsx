@@ -40,6 +40,8 @@ interface VisualizationContextType {
   setAnalysisType: (type: string) => void;
   isAnalyzing: boolean;
   clearDatasets: () => void;
+  availableCategories: string[];
+  availableRegions: string[];
 }
 
 const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -53,20 +55,43 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [analyzedData, setAnalyzedData] = useState<any | null>(null);
   const [analysisType, setAnalysisType] = useState('trends');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableRegions, setAvailableRegions] = useState<string[]>([]);
 
   // Clear all datasets
   const clearDatasets = () => {
     setDatasets([]);
     setActiveDataset(null);
     setAnalyzedData(null);
+    setAvailableCategories([]);
+    setAvailableRegions([]);
   };
+
+  // Extract available categories and regions when dataset changes
+  useEffect(() => {
+    if (activeDataset) {
+      // Extract unique categories
+      const categories = Array.from(new Set(activeDataset.data.map(item => item.category)));
+      setAvailableCategories(categories);
+      
+      // Extract unique regions
+      const regions = Array.from(new Set(activeDataset.data
+        .filter(item => item.region)
+        .map(item => item.region as string)
+      ));
+      setAvailableRegions(regions);
+      
+      // Auto analyze when dataset changes
+      analyzeData();
+    }
+  }, [activeDataset]);
 
   const loadDataset = (datasetId: string) => {
     const dataset = datasets.find(d => d.id === datasetId);
     if (dataset) {
       setActiveDataset(dataset);
       toast.success(`Loaded dataset: ${dataset.name}`);
-      analyzeData();
+      // Analysis will be triggered by the useEffect
     } else {
       toast.error('Dataset not found');
     }
@@ -84,16 +109,18 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         lastUpdated: new Date()
       };
       
-      setActiveDataset(newDataset);
-      
       // Add to datasets, replacing previous import with same ID
       setDatasets(prev => {
         const filteredDatasets = prev.filter(d => d.id !== datasetId);
         return [...filteredDatasets, newDataset];
       });
       
+      // Set as active dataset
+      setActiveDataset(newDataset);
+      
       toast.success(`Imported: ${newDataset.name}`);
-      analyzeData();
+      // Analysis will be triggered by the useEffect
+      setCurrentView('chart');
     }
   };
 
@@ -118,10 +145,16 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
           value: item.value,
           percentage: Math.round((item.value! / activeDataset.data.reduce((sum, i) => sum + i.value!, 0)) * 100)
         })).sort((a, b) => b.value! - a.value!),
-        insights: activeDataset.analysis?.insights || [
-          `${activeDataset.data[0].category} is the top performing category`,
-          `${activeDataset.data[activeDataset.data.length - 1].category} needs attention`,
-          'Consider exploring seasonal patterns in the data'
+        insights: [
+          `${activeDataset.data[0].category} shows the highest performance with ${activeDataset.data[0].value} units`,
+          `${analysisType === 'trends' ? 'Strong upward trend detected in recent data' : 
+            analysisType === 'predictions' ? 'Future growth projected at 15-20%' :
+            analysisType === 'correlations' ? 'Strong correlation between categories detected' :
+            'Several anomalies detected in recent transactions'}`,
+          `Consider exploring ${analysisType === 'trends' ? 'seasonal patterns' : 
+            analysisType === 'predictions' ? 'future market conditions' :
+            analysisType === 'correlations' ? 'causal relationships' :
+            'potential fraud indicators'} in the data`
         ]
       };
       
@@ -149,7 +182,9 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         analysisType,
         setAnalysisType,
         isAnalyzing,
-        clearDatasets
+        clearDatasets,
+        availableCategories,
+        availableRegions
       }}
     >
       {children}

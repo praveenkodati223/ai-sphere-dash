@@ -12,7 +12,7 @@ const DataImport = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>('');
   const [datasetName, setDatasetName] = useState<string>('');
-  const { importSampleData, clearDatasets } = useVisualization();
+  const { importSampleData, clearDatasets, analyzeData } = useVisualization();
   const navigate = useNavigate();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,7 +49,7 @@ const DataImport = () => {
       setFileName('');
       setDatasetName('');
       
-      // Auto navigate to visualization section
+      // Navigate to trends analysis section
       navigate('/analytics');
     }, 1500);
   };
@@ -67,17 +67,22 @@ const DataImport = () => {
     
     // Simulate API connection
     setTimeout(() => {
-      // Use API URL as the dataset name
-      const apiName = new URL(apiUrl).hostname.replace('www.', '');
-      
-      importSampleData('api-data', `${apiName} Data`, `Imported from API: ${apiUrl}`);
-      
-      toast.success("Successfully connected to API");
-      setIsUploading(false);
-      setApiUrl('');
-      
-      // Auto navigate to visualization section
-      navigate('/analytics');
+      try {
+        // Use API URL as the dataset name
+        const apiName = new URL(apiUrl).hostname.replace('www.', '');
+        
+        importSampleData('api-data', `${apiName} Data`, `Imported from API: ${apiUrl}`);
+        
+        toast.success("Successfully connected to API");
+        setIsUploading(false);
+        setApiUrl('');
+        
+        // Navigate to trends analysis section
+        navigate('/analytics');
+      } catch (error) {
+        toast.error("Invalid URL format");
+        setIsUploading(false);
+      }
     }, 1500);
   };
   
@@ -92,7 +97,7 @@ const DataImport = () => {
       importSampleData(datasetId);
       setIsUploading(false);
       
-      // Auto navigate to visualization section
+      // Navigate to trends analysis section
       navigate('/analytics');
     }, 1000);
   };

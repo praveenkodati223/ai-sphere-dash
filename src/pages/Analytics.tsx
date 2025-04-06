@@ -9,8 +9,14 @@ import { useVisualization } from '@/contexts/VisualizationContext';
 import DataImport from '../components/DataImport';
 
 const Analytics = () => {
-  const [analysisType, setAnalysisType] = React.useState('trends');
-  const { activeDataset } = useVisualization();
+  const { activeDataset, setAnalysisType, analyzeData, analysisType } = useVisualization();
+  
+  // Re-analyze data when analysis type changes
+  useEffect(() => {
+    if (activeDataset) {
+      analyzeData();
+    }
+  }, [analysisType, activeDataset]);
   
   return (
     <div className="min-h-screen bg-sphere-dark">
@@ -49,7 +55,7 @@ const Analytics = () => {
                       <div className="glass p-6 mb-6">
                         <h3 className="text-xl font-semibold mb-4">Trends Analysis</h3>
                         <p className="mb-6 text-slate-300">
-                          Identify patterns and trends in your data over time. See how key metrics 
+                          Identify patterns and trends in your {activeDataset.name} over time. See how key metrics 
                           have evolved and make informed decisions based on historical performance.
                         </p>
                         <Visualizations />
@@ -60,7 +66,7 @@ const Analytics = () => {
                       <div className="glass p-6 mb-6">
                         <h3 className="text-xl font-semibold mb-4">Predictive Analytics</h3>
                         <p className="mb-6 text-slate-300">
-                          Leverage AI to forecast future trends based on historical data. 
+                          Leverage AI to forecast future trends in {activeDataset.name} based on historical data. 
                           Our predictive models help you anticipate market changes and customer behavior.
                         </p>
                         <Visualizations />
@@ -71,7 +77,7 @@ const Analytics = () => {
                       <div className="glass p-6 mb-6">
                         <h3 className="text-xl font-semibold mb-4">Correlation Analysis</h3>
                         <p className="mb-6 text-slate-300">
-                          Discover relationships between different metrics and understand how 
+                          Discover relationships between different metrics in {activeDataset.name} and understand how 
                           variables influence each other. Identify key drivers of your success.
                         </p>
                         <Visualizations />
@@ -82,7 +88,7 @@ const Analytics = () => {
                       <div className="glass p-6 mb-6">
                         <h3 className="text-xl font-semibold mb-4">Anomaly Detection</h3>
                         <p className="mb-6 text-slate-300">
-                          Automatically identify outliers and unusual patterns in your data. 
+                          Automatically identify outliers and unusual patterns in {activeDataset.name}. 
                           Get alerted to potential issues or opportunities that require attention.
                         </p>
                         <Visualizations />

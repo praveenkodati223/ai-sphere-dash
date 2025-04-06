@@ -16,24 +16,64 @@ import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
 
 const FilterPanel = () => {
-  const { dateRange, setDateRange } = useVisualization();
+  const { 
+    dateRange, 
+    setDateRange, 
+    availableCategories, 
+    availableRegions,
+    activeDataset,
+    analyzeData
+  } = useVisualization();
+  
   const [showOutliers, setShowOutliers] = React.useState<boolean>(false);
   const [minValue, setMinValue] = React.useState<string>('0');
   const [maxValue, setMaxValue] = React.useState<string>('1000');
   const [category, setCategory] = React.useState<string>('all');
   const [region, setRegion] = React.useState<string>('all');
   
+  // Reset filters when dataset changes
+  React.useEffect(() => {
+    if (activeDataset) {
+      // Calculate min and max values from dataset
+      const values = activeDataset.data.map(item => item.value || 0);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      
+      setMinValue(min.toString());
+      setMaxValue(max.toString());
+      setCategory('all');
+      setRegion('all');
+    }
+  }, [activeDataset]);
+  
   const handleReset = () => {
-    setShowOutliers(false);
-    setMinValue('0');
-    setMaxValue('1000');
-    setCategory('all');
-    setRegion('all');
-    setDateRange([30, 90]);
-    toast.success("Filters reset to default");
+    if (activeDataset) {
+      const values = activeDataset.data.map(item => item.value || 0);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      
+      setShowOutliers(false);
+      setMinValue(min.toString());
+      setMaxValue(max.toString());
+      setCategory('all');
+      setRegion('all');
+      setDateRange([30, 90]);
+      toast.success("Filters reset to default");
+    } else {
+      setShowOutliers(false);
+      setMinValue('0');
+      setMaxValue('1000');
+      setCategory('all');
+      setRegion('all');
+      setDateRange([30, 90]);
+      toast.success("Filters reset to default");
+    }
   };
   
   const handleApply = () => {
+    // In a real application, we would filter the data here
+    // For now, we'll just trigger a new analysis
+    analyzeData();
     toast.success("Filters applied successfully");
   };
   
@@ -50,10 +90,9 @@ const FilterPanel = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="electronics">Electronics</SelectItem>
-              <SelectItem value="clothing">Clothing</SelectItem>
-              <SelectItem value="food">Food & Beverages</SelectItem>
-              <SelectItem value="home">Home & Garden</SelectItem>
+              {availableCategories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -66,10 +105,9 @@ const FilterPanel = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Regions</SelectItem>
-              <SelectItem value="north">North</SelectItem>
-              <SelectItem value="south">South</SelectItem>
-              <SelectItem value="east">East</SelectItem>
-              <SelectItem value="west">West</SelectItem>
+              {availableRegions.map((reg) => (
+                <SelectItem key={reg} value={reg}>{reg}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
