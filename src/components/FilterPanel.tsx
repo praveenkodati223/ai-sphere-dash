@@ -48,8 +48,12 @@ const FilterPanel = () => {
       
       // Also reset date range to default
       setDateRange([30, 90]);
+      
+      console.log("FilterPanel: Dataset changed, resetting filters");
+      console.log("Available categories:", availableCategories);
+      console.log("Available regions:", availableRegions);
     }
-  }, [activeDataset, setDateRange]);
+  }, [activeDataset, setDateRange, availableCategories, availableRegions]);
   
   const handleReset = () => {
     if (activeDataset) {
@@ -95,37 +99,39 @@ const FilterPanel = () => {
       </div>
       
       <div className="space-y-5">
-        {availableCategories.length > 0 && (
+        {availableCategories && availableCategories.length > 0 && (
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger id="category">
+              <SelectTrigger id="category" className="bg-slate-800 border-sphere-cyan/30">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border border-sphere-cyan/20">
                 <SelectItem value="all">All Categories</SelectItem>
                 {availableCategories.map((cat) => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Filter by product or service category</p>
           </div>
         )}
         
-        {availableRegions.length > 0 && (
+        {availableRegions && availableRegions.length > 0 && (
           <div className="space-y-2">
             <Label htmlFor="region">Region</Label>
             <Select value={region} onValueChange={setRegion}>
-              <SelectTrigger id="region">
+              <SelectTrigger id="region" className="bg-slate-800 border-sphere-cyan/30">
                 <SelectValue placeholder="Select region" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border border-sphere-cyan/20">
                 <SelectItem value="all">All Regions</SelectItem>
                 {availableRegions.map((reg) => (
                   <SelectItem key={reg} value={reg}>{reg}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Filter by geographic region</p>
           </div>
         )}
         
@@ -143,6 +149,7 @@ const FilterPanel = () => {
             onValueChange={setDateRange as any}
             className="my-4"
           />
+          <p className="text-xs text-muted-foreground">Filter data by time period</p>
         </div>
         
         <div className="space-y-2">
@@ -153,7 +160,9 @@ const FilterPanel = () => {
             placeholder="0"
             value={minValue}
             onChange={(e) => setMinValue(e.target.value)}
+            className="bg-slate-800 border-sphere-cyan/30"
           />
+          <p className="text-xs text-muted-foreground">Set minimum threshold for values</p>
         </div>
         
         <div className="space-y-2">
@@ -164,7 +173,9 @@ const FilterPanel = () => {
             placeholder="1000"
             value={maxValue}
             onChange={(e) => setMaxValue(e.target.value)}
+            className="bg-slate-800 border-sphere-cyan/30"
           />
+          <p className="text-xs text-muted-foreground">Set maximum threshold for values</p>
         </div>
         
         <div className="flex items-center space-x-2">

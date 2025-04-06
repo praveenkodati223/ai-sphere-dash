@@ -26,12 +26,18 @@ import {
   PieChartIcon, 
   ActivityIcon,
   GaugeIcon,
-  Download
+  Download,
+  InfoIcon
 } from "lucide-react";
 import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
-import { sampleCategories } from '@/services/dataService';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Visualizations = () => {
   const { 
@@ -52,67 +58,85 @@ const Visualizations = () => {
     }
   }, [activeDataset, analyzedData]);
   
-  // Create a fallback for sample data in case sampleCategories is not available
+  // Create a fallback for sample data in case categories are not available
   const fallbackCategories = ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'];
-  const categories = sampleCategories || fallbackCategories;
+  const categories = activeDataset?.data.map(item => item.category) || fallbackCategories;
   
   const chartGroups = [
     {
       label: 'Bar & Column',
       charts: [
-        { id: 'bar', name: 'Column Chart', icon: <BarChart3Icon className="h-4 w-4 mr-2" /> },
-        { id: 'clusteredBar', name: 'Clustered Bar', icon: <BarChart3Icon className="h-4 w-4 mr-2" /> },
-        { id: 'stackedBar', name: 'Stacked Bar', icon: <BarChart3Icon className="h-4 w-4 mr-2" /> }
+        { id: 'bar', name: 'Column Chart', icon: <BarChart3Icon className="h-4 w-4 mr-2" />, 
+          description: 'Compares values across categories with vertical bars. Best for comparing discrete data points.' },
+        { id: 'clusteredBar', name: 'Clustered Bar', icon: <BarChart3Icon className="h-4 w-4 mr-2" />,
+          description: 'Groups multiple categories side by side. Ideal for comparing values across multiple groups.' },
+        { id: 'stackedBar', name: 'Stacked Bar', icon: <BarChart3Icon className="h-4 w-4 mr-2" />,
+          description: 'Shows parts of a whole by stacking bar segments. Good for showing composition and total values.' }
       ]
     },
     {
       label: 'Line & Area',
       charts: [
-        { id: 'line', name: 'Line Chart', icon: <LineChartIcon className="h-4 w-4 mr-2" /> },
-        { id: 'area', name: 'Area Chart', icon: <ActivityIcon className="h-4 w-4 mr-2" /> },
-        { id: 'stackedArea', name: 'Stacked Area', icon: <ActivityIcon className="h-4 w-4 mr-2" /> }
+        { id: 'line', name: 'Line Chart', icon: <LineChartIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows trends over a continuous interval. Perfect for time series data and trends.' },
+        { id: 'area', name: 'Area Chart', icon: <ActivityIcon className="h-4 w-4 mr-2" />,
+          description: 'Similar to line charts but with filled area below. Emphasizes volume over time.' },
+        { id: 'stackedArea', name: 'Stacked Area', icon: <ActivityIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows how multiple series add up to a total. Useful for part-to-whole relationships over time.' }
       ]
     },
     {
       label: 'Pie & Donut',
       charts: [
-        { id: 'pie', name: 'Pie Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" /> },
-        { id: 'donut', name: 'Donut Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" /> }
+        { id: 'pie', name: 'Pie Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows parts of a whole as slices of a circle. Best when showing proportions under 5-7 categories.' },
+        { id: 'donut', name: 'Donut Chart', icon: <PieChartIcon className="h-4 w-4 mr-2" />,
+          description: 'Similar to pie chart but with a hole in the center. Can show additional information in the center.' }
       ]
     },
     {
       label: 'Scatter & Bubble',
       charts: [
-        { id: 'scatter', name: 'Scatter Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'bubble', name: 'Bubble Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
+        { id: 'scatter', name: 'Scatter Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows correlation between two variables. Good for identifying patterns and outliers.' },
+        { id: 'bubble', name: 'Bubble Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Like scatter charts but with a third dimension shown by bubble size. Shows 3 variables at once.' },
       ]
     },
     {
       label: 'Advanced',
       charts: [
-        { id: 'radar', name: 'Radar Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'treemap', name: 'Treemap', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'funnel', name: 'Funnel Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'waterfall', name: 'Waterfall Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'heatmap', name: 'Heatmap', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> }
+        { id: 'radar', name: 'Radar Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Compares multiple variables in a circular display. Good for performance analysis across metrics.' },
+        { id: 'treemap', name: 'Treemap', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows hierarchical data as nested rectangles. Size indicates value, color can show categories.' },
+        { id: 'funnel', name: 'Funnel Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows values through stages of a process. Perfect for conversion or sales processes.' },
+        { id: 'waterfall', name: 'Waterfall Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows how an initial value is affected by positive and negative changes. Good for financial data.' },
+        { id: 'heatmap', name: 'Heatmap', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Uses color intensity to show values in a matrix. Great for showing patterns across two dimensions.' }
       ]
     },
     {
       label: 'Metrics',
       charts: [
-        { id: 'gauge', name: 'Gauge', icon: <GaugeIcon className="h-4 w-4 mr-2" /> },
-        { id: 'kpi', name: 'KPI Cards', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> },
-        { id: 'table', name: 'Data Table', icon: <ChartBarIcon className="h-4 w-4 mr-2" /> }
+        { id: 'gauge', name: 'Gauge', icon: <GaugeIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows a single value within a range. Like a speedometer for your metrics.' },
+        { id: 'kpi', name: 'KPI Cards', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Displays key performance indicators in simple card format. Shows the most important numbers.' },
+        { id: 'table', name: 'Data Table', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
+          description: 'Shows raw data in rows and columns. Best when precise values matter more than patterns.' }
       ]
     }
   ];
   
-  const currentChartName = React.useMemo(() => {
+  const currentChartInfo = React.useMemo(() => {
     for (const group of chartGroups) {
       const chart = group.charts.find(c => c.id === selectedChart);
-      if (chart) return chart.name;
+      if (chart) return chart;
     }
-    return 'Select Chart';
+    return {name: 'Select Chart', description: 'Please select a chart type'};
   }, [selectedChart, chartGroups]);
   
   const handleCustomChartBuilder = () => {
@@ -135,7 +159,7 @@ const Visualizations = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10">
-                {currentChartName}
+                {currentChartInfo.name}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-slate-900 border border-sphere-cyan/20">
@@ -188,6 +212,13 @@ const Visualizations = () => {
         </div>
       </div>
       
+      <div className="px-4 py-2 bg-slate-800/30 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <InfoIcon className="h-4 w-4 text-sphere-cyan" />
+          <p className="text-sm text-slate-300">{currentChartInfo.description}</p>
+        </div>
+      </div>
+      
       <Tabs value={currentView} className="w-full">
         <TabsContent value="chart" className="mt-0 p-0">
           <div className="p-4 h-[350px] flex items-center justify-center">
@@ -226,7 +257,7 @@ const Visualizations = () => {
                 ) : (
                   categories.map((category, idx) => (
                     <tr key={idx} className="border-b border-white/5">
-                      <td className="p-2">{category}</td>
+                      <td className="p-2">{category || `Category ${idx+1}`}</td>
                       <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
                       <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
                       <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
@@ -307,6 +338,105 @@ const Visualizations = () => {
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* Show additional analysis data based on the analysis type */}
+                {analyzedData.trendData && (
+                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Trend Analysis</CardTitle>
+                      <CardDescription>Growth patterns and seasonal trends</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Growth Rate</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.growthRate}%</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Seasonality</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.seasonality}</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Forecast</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.forecast}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {analyzedData.predictionData && (
+                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Predictions</CardTitle>
+                      <CardDescription>Future projections based on historical data</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Predicted Growth</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.predictionData.predictedGrowth}%</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Confidence Interval</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.predictionData.confidenceInterval[0].toLocaleString()} - {analyzedData.predictionData.confidenceInterval[1].toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {analyzedData.correlationData && (
+                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Correlation Analysis</CardTitle>
+                      <CardDescription>Relationships between variables</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Strongest Correlation</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.strongestCorrelation}</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Primary Driver</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.primaryDriver}</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Factors Analyzed</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.factorsAnalyzed}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {analyzedData.anomalyData && (
+                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Anomaly Detection</CardTitle>
+                      <CardDescription>Unusual patterns and outliers</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Anomalies Detected</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.anomaliesDetected}</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Detection Confidence</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.confidence}%</div>
+                        </div>
+                        <div className="p-3 bg-slate-700/40 rounded-lg">
+                          <div className="text-sm text-slate-300">Impact Score</div>
+                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.impactScore}/100</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

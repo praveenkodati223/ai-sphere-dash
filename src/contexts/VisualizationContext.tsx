@@ -161,8 +161,8 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     // Simulate analysis process
     setTimeout(() => {
       try {
-        // Generate analysis based on current dataset and analysis type
-        const result = {
+        // Generate different analysis results based on analysis type
+        let result: any = {
           summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
           metrics: {
             total: activeDataset.data.reduce((sum, item) => sum + (item.value || 
@@ -180,8 +180,70 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
             percentage: Math.round(((item.value || (item.q1 + item.q2 + item.q3 + item.q4)) / 
               activeDataset.data.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
           })).sort((a, b) => b.value - a.value),
-          insights: generateInsights(activeDataset, analysisType)
+          insights: []
         };
+        
+        // Generate different insights based on analysis type
+        switch(analysisType) {
+          case 'trends':
+            result.trendData = {
+              growthRate: Math.round(Math.random() * 20),
+              seasonality: Math.random() > 0.5 ? "Strong" : "Moderate",
+              forecast: "Upward"
+            };
+            result.insights = [
+              `${result.breakdown[0]?.category || 'Product'} shows the highest upward trend with ${result.trendData.growthRate}% growth`,
+              'Strong upward trend detected in recent data',
+              'Consider investigating seasonal patterns in the time series data',
+              'Month-over-month growth is accelerating'
+            ];
+            break;
+          
+          case 'predictions':
+            result.predictionData = {
+              confidenceInterval: [Math.round(result.metrics.average * 0.85), Math.round(result.metrics.average * 1.15)],
+              forecastPeriod: "Next Quarter",
+              predictedGrowth: Math.round(Math.random() * 25),
+              riskFactor: Math.round(Math.random() * 100)
+            };
+            result.insights = [
+              `Future growth projected at ${result.predictionData.predictedGrowth}% for next quarter`,
+              'Market conditions suggest favorable environment for expansion',
+              `Predicted value range: ${result.predictionData.confidenceInterval[0]}-${result.predictionData.confidenceInterval[1]}`,
+              `Risk assessment score: ${result.predictionData.riskFactor}/100`
+            ];
+            break;
+          
+          case 'correlations':
+            result.correlationData = {
+              strongestCorrelation: Math.round(Math.random() * 50 + 50) / 100,
+              factorsAnalyzed: Math.round(Math.random() * 10 + 5),
+              primaryDriver: result.breakdown[Math.floor(Math.random() * result.breakdown.length)]?.category || 'Unknown'
+            };
+            result.insights = [
+              `Strong correlation (${result.correlationData.strongestCorrelation}) found between categories`,
+              `${result.correlationData.primaryDriver} is the primary driver of overall performance`,
+              'Consider exploring causal relationships beyond correlation',
+              `${result.correlationData.factorsAnalyzed} different factors analyzed for relationships`
+            ];
+            break;
+          
+          case 'anomalies':
+            const anomalyCount = Math.floor(Math.random() * 5) + 1;
+            result.anomalyData = {
+              anomaliesDetected: anomalyCount,
+              confidence: Math.round(Math.random() * 30 + 70),
+              impactScore: Math.round(Math.random() * 100),
+              detectionMethod: "Statistical outlier detection"
+            };
+            result.insights = [
+              `${anomalyCount} anomalies detected in recent transactions`,
+              `Anomaly detection confidence: ${result.anomalyData.confidence}%`,
+              'Consider investigating potential data quality issues or fraud',
+              `Impact score of detected anomalies: ${result.anomalyData.impactScore}/100`
+            ];
+            break;
+        }
         
         setAnalyzedData(result);
         setIsAnalyzing(false);
@@ -199,45 +261,6 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsAnalyzing(false);
       }
     }, 1200);
-  };
-  
-  // Helper function to generate insights based on the dataset and analysis type
-  const generateInsights = (dataset: DataSet, type: string) => {
-    const insights = [];
-    
-    // Sort data by value to find top performers
-    const sortedData = [...dataset.data].sort((a, b) => 
-      (b.value || (b.q1 + b.q2 + b.q3 + b.q4)) - 
-      (a.value || (a.q1 + a.q2 + a.q3 + a.q4))
-    );
-    
-    const topCategory = sortedData[0]?.category || 'Unknown';
-    const topValue = sortedData[0]?.value || (sortedData[0]?.q1 + sortedData[0]?.q2 + 
-      sortedData[0]?.q3 + sortedData[0]?.q4) || 0;
-    
-    insights.push(`${topCategory} shows the highest performance with ${topValue.toLocaleString()} units`);
-    
-    // Add insight based on analysis type
-    switch (type) {
-      case 'trends':
-        insights.push('Strong upward trend detected in recent data');
-        insights.push('Consider exploring seasonal patterns in the data');
-        break;
-      case 'predictions':
-        insights.push('Future growth projected at 15-20%');
-        insights.push('Consider exploring future market conditions');
-        break;
-      case 'correlations':
-        insights.push('Strong correlation detected between categories');
-        insights.push('Consider exploring causal relationships in the data');
-        break;
-      case 'anomalies':
-        insights.push('Several anomalies detected in recent transactions');
-        insights.push('Consider exploring potential fraud indicators');
-        break;
-    }
-    
-    return insights;
   };
 
   return (
