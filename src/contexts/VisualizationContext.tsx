@@ -88,6 +88,18 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       setAvailableRegions(regions);
       console.log("Available regions:", regions);
       
+      // Set default chart based on dataset type
+      if (categories.length > 10) {
+        setSelectedChart('table');
+      } else if (regions.length > 0 && categories.length <= 5) {
+        setSelectedChart('pie');
+      } else {
+        setSelectedChart('bar');
+      }
+      
+      // When dataset changes, make sure we're showing the chart view
+      setCurrentView('chart');
+      
       // Auto analyze when dataset changes
       analyzeData();
     }
@@ -126,11 +138,16 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       setActiveDataset(newDataset);
       
       toast.success(`Imported: ${newDataset.name}`);
-      setCurrentView('chart');
       
       // Make sure we reset the analysis data
       setAnalyzedData(null);
+      
+      console.log("Dataset imported and activated:", newDataset);
+      return true;
     }
+    
+    console.error("Sample dataset not found:", datasetId);
+    return false;
   };
 
   const analyzeData = () => {
@@ -143,34 +160,44 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     
     // Simulate analysis process
     setTimeout(() => {
-      // Generate analysis based on current dataset and analysis type
-      const result = {
-        summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
-        metrics: {
-          total: activeDataset.data.reduce((sum, item) => sum + (item.value || 
-            (item.q1 + item.q2 + item.q3 + item.q4)), 0),
-          average: Math.round(activeDataset.data.reduce((sum, item) => sum + (item.value || 
-            (item.q1 + item.q2 + item.q3 + item.q4)), 0) / activeDataset.data.length),
-          max: Math.max(...activeDataset.data.map(item => item.value || 
-            (item.q1 + item.q2 + item.q3 + item.q4))),
-          min: Math.min(...activeDataset.data.map(item => item.value || 
-            (item.q1 + item.q2 + item.q3 + item.q4)))
-        },
-        breakdown: activeDataset.data.map(item => ({
-          category: item.category,
-          value: item.value || (item.q1 + item.q2 + item.q3 + item.q4),
-          percentage: Math.round(((item.value || (item.q1 + item.q2 + item.q3 + item.q4)) / 
-            activeDataset.data.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
-        })).sort((a, b) => b.value - a.value),
-        insights: generateInsights(activeDataset, analysisType)
-      };
-      
-      setAnalyzedData(result);
-      setIsAnalyzing(false);
-      toast.success('Analysis complete!');
-      
-      // Automatically switch to insights view after analysis
-      setCurrentView('insights');
+      try {
+        // Generate analysis based on current dataset and analysis type
+        const result = {
+          summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
+          metrics: {
+            total: activeDataset.data.reduce((sum, item) => sum + (item.value || 
+              (item.q1 + item.q2 + item.q3 + item.q4)), 0),
+            average: Math.round(activeDataset.data.reduce((sum, item) => sum + (item.value || 
+              (item.q1 + item.q2 + item.q3 + item.q4)), 0) / activeDataset.data.length),
+            max: Math.max(...activeDataset.data.map(item => item.value || 
+              (item.q1 + item.q2 + item.q3 + item.q4))),
+            min: Math.min(...activeDataset.data.map(item => item.value || 
+              (item.q1 + item.q2 + item.q3 + item.q4)))
+          },
+          breakdown: activeDataset.data.map(item => ({
+            category: item.category,
+            value: item.value || (item.q1 + item.q2 + item.q3 + item.q4),
+            percentage: Math.round(((item.value || (item.q1 + item.q2 + item.q3 + item.q4)) / 
+              activeDataset.data.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
+          })).sort((a, b) => b.value - a.value),
+          insights: generateInsights(activeDataset, analysisType)
+        };
+        
+        setAnalyzedData(result);
+        setIsAnalyzing(false);
+        toast.success('Analysis complete!');
+        
+        // After successful analysis, ensure insights are visible
+        // Only switch to insights view on initial analysis
+        if (!analyzedData) {
+          setCurrentView('insights');
+        }
+        
+      } catch (error) {
+        console.error("Error analyzing data:", error);
+        toast.error('Error analyzing data. Please try again.');
+        setIsAnalyzing(false);
+      }
     }, 1200);
   };
   

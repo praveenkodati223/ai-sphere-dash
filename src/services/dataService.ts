@@ -103,5 +103,95 @@ export const sampleDatasets: DataSet[] = [
         'Sports equipment showing higher than needed levels'
       ]
     }
+  },
+  {
+    id: 'financial',
+    name: 'Financial Data',
+    description: 'Revenue and expense data with quarterly breakdown',
+    data: generateSampleData(),
+    lastUpdated: new Date(),
+    analysis: {
+      trend: 'Upward',
+      insights: [
+        'Revenue increased by 12% year over year',
+        'Cost reduction measures showing positive results',
+        'Q3 showed strongest performance across all categories'
+      ]
+    }
+  },
+  {
+    id: 'imported-data',
+    name: 'Imported Dataset',
+    description: 'User imported dataset',
+    data: generateSampleData(),
+    lastUpdated: new Date(),
+    analysis: {
+      trend: 'Mixed',
+      insights: [
+        'Dataset requires detailed analysis',
+        'Multiple patterns detected across categories',
+        'Consider filtering by region for more insights'
+      ]
+    }
+  },
+  {
+    id: 'api-data',
+    name: 'API Data',
+    description: 'Data imported from external API',
+    data: generateSampleData(),
+    lastUpdated: new Date(),
+    analysis: {
+      trend: 'Variable',
+      insights: [
+        'External data shows interesting patterns',
+        'Consider refreshing regularly for latest trends',
+        'Multiple anomalies detected worth investigating'
+      ]
+    }
   }
 ];
+
+// Function to generate data with specific patterns for demo purposes
+export const generatePatternedData = (pattern: string): DataPoint[] => {
+  switch (pattern) {
+    case 'seasonal':
+      return sampleCategories.map(category => ({
+        category,
+        q1: Math.floor(Math.random() * 500) + 100,
+        q2: Math.floor(Math.random() * 900) + 600, // Peak in Q2
+        q3: Math.floor(Math.random() * 700) + 300,
+        q4: Math.floor(Math.random() * 500) + 100,
+        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+      }));
+
+    case 'growing':
+      return sampleCategories.map(category => ({
+        category,
+        q1: Math.floor(Math.random() * 300) + 100,
+        q2: Math.floor(Math.random() * 300) + 300,
+        q3: Math.floor(Math.random() * 300) + 500,
+        q4: Math.floor(Math.random() * 300) + 700, // Growing each quarter
+        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+      }));
+      
+    case 'anomalies':
+      return sampleCategories.map((category, idx) => {
+        // Add a big spike to one random category
+        const isAnomaly = idx === Math.floor(Math.random() * sampleCategories.length);
+        return {
+          category,
+          q1: Math.floor(Math.random() * 500) + 200,
+          q2: Math.floor(Math.random() * 500) + 200,
+          q3: isAnomaly ? Math.floor(Math.random() * 2000) + 1500 : Math.floor(Math.random() * 500) + 200, // Anomaly in Q3
+          q4: Math.floor(Math.random() * 500) + 200,
+          region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+          subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+        };
+      });
+      
+    default:
+      return generateSampleData();
+  }
+};

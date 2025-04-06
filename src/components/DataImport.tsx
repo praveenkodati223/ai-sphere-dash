@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
+import { AlertCircle, FileIcon, InfoIcon } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DataImport = () => {
   const [fileName, setFileName] = useState<string>('');
@@ -23,6 +25,14 @@ const DataImport = () => {
       // Extract name without extension for dataset name
       const nameWithoutExt = file.name.split('.').slice(0, -1).join('.');
       setDatasetName(nameWithoutExt || file.name);
+      
+      // Validate file size (100MB limit)
+      const fileSizeInMB = file.size / (1024 * 1024);
+      if (fileSizeInMB > 100) {
+        toast.error(`File size exceeds 100MB limit (${fileSizeInMB.toFixed(2)}MB)`);
+        setFileName('');
+        return;
+      }
     }
   };
   
@@ -37,7 +47,7 @@ const DataImport = () => {
     // First clear existing datasets
     clearDatasets();
     
-    // Simulate upload process
+    // Simulate upload process with longer timeout to emulate large file processing
     setTimeout(() => {
       const name = datasetName || fileName.split('.')[0];
       
@@ -84,7 +94,7 @@ const DataImport = () => {
         setAnalysisType('trends');
         
         // Navigate to analytics page and force a refresh
-        navigate('/analytics?refresh=' + Date.now());
+        navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
       } catch (error) {
         toast.error("Invalid URL format");
         setIsUploading(false);
@@ -106,14 +116,22 @@ const DataImport = () => {
       // Set the analysis type to trends by default
       setAnalysisType('trends');
       
-      // Navigate to analytics page and force a refresh
-      navigate('/analytics?refresh=' + Date.now());
+      // Navigate to analytics page and force a refresh - include view=visualization to ensure visualization is shown
+      navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
     }, 1000);
   };
   
   return (
     <div className="glass p-6 rounded-lg">
       <h3 className="text-xl font-semibold mb-4">Import Data</h3>
+      
+      <Alert className="mb-4 bg-blue-950/40 border-blue-500/30">
+        <InfoIcon className="h-4 w-4 text-blue-500" />
+        <AlertTitle>Pro Tip</AlertTitle>
+        <AlertDescription>
+          After importing data, you'll be taken to the visualization page where you can explore your data with various chart types and analysis tools.
+        </AlertDescription>
+      </Alert>
       
       <Tabs defaultValue="file" className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
@@ -127,12 +145,13 @@ const DataImport = () => {
             <div className="relative flex-1">
               <Input 
                 type="file" 
-                accept=".csv,.xlsx,.json" 
+                accept=".csv,.xlsx,.json,.xls,.txt,.xml,.parquet" 
                 className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                 onChange={handleFileChange}
               />
-              <div className="w-full px-4 py-2 border border-dashed border-sphere-cyan/50 rounded-md text-muted-foreground">
-                {fileName || "Choose CSV, Excel or JSON file"}
+              <div className="w-full px-4 py-2 border border-dashed border-sphere-cyan/50 rounded-md text-muted-foreground flex items-center gap-2">
+                <FileIcon className="h-4 w-4" />
+                {fileName || "Choose file to import"}
               </div>
             </div>
             
@@ -158,8 +177,23 @@ const DataImport = () => {
           )}
           
           <p className="text-xs text-muted-foreground">
-            Supported formats: CSV, Excel (.xlsx), JSON. Max size: 10MB
+            Supported formats: CSV, Excel (.xlsx, .xls), JSON, XML, TXT, Parquet. Max size: 100MB
           </p>
+          
+          <div className="grid grid-cols-3 gap-2 text-xs mt-2">
+            <div className="p-2 rounded bg-slate-800/50 border border-white/5">
+              <div className="font-semibold mb-1">CSV</div>
+              <div className="text-slate-400">Comma-separated values</div>
+            </div>
+            <div className="p-2 rounded bg-slate-800/50 border border-white/5">
+              <div className="font-semibold mb-1">Excel</div>
+              <div className="text-slate-400">Spreadsheet files</div>
+            </div>
+            <div className="p-2 rounded bg-slate-800/50 border border-white/5">
+              <div className="font-semibold mb-1">JSON</div>
+              <div className="text-slate-400">Structured data</div>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="url" className="space-y-4">
@@ -184,6 +218,17 @@ const DataImport = () => {
           <p className="text-xs text-muted-foreground">
             Connect to REST APIs, Google Sheets, or public datasets
           </p>
+          
+          <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+            <div className="p-2 rounded bg-slate-800/50 border border-white/5">
+              <div className="font-semibold mb-1">REST APIs</div>
+              <div className="text-slate-400">Connect to JSON endpoints</div>
+            </div>
+            <div className="p-2 rounded bg-slate-800/50 border border-white/5">
+              <div className="font-semibold mb-1">Web Services</div>
+              <div className="text-slate-400">Live data feeds</div>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="sample" className="space-y-4">
@@ -211,7 +256,38 @@ const DataImport = () => {
                 <div className="text-xs text-muted-foreground">Visitor traffic, sources, and conversion rates</div>
               </div>
             </Button>
+            
+            <Button
+              variant="outline" 
+              className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 h-auto p-4 justify-start"
+              onClick={() => handleSampleDataLoad('inventory')}
+              disabled={isUploading}
+            >
+              <div className="text-left">
+                <div className="font-medium">Inventory Data</div>
+                <div className="text-xs text-muted-foreground">Stock levels across categories and locations</div>
+              </div>
+            </Button>
+            
+            <Button
+              variant="outline" 
+              className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10 h-auto p-4 justify-start"
+              onClick={() => handleSampleDataLoad('financial')}
+              disabled={isUploading}
+            >
+              <div className="text-left">
+                <div className="font-medium">Financial Data</div>
+                <div className="text-xs text-muted-foreground">Revenue and expense data with quarterly breakdown</div>
+              </div>
+            </Button>
           </div>
+          
+          <Alert className="mt-2 bg-slate-800/50 border border-white/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Sample datasets are perfect for exploring Sphere's visualization capabilities before importing your own data.
+            </AlertDescription>
+          </Alert>
         </TabsContent>
       </Tabs>
     </div>
