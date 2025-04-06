@@ -29,7 +29,7 @@ interface VisualizationContextType {
   selectedChart: ChartType;
   setSelectedChart: (chart: ChartType) => void;
   loadDataset: (datasetId: string) => void;
-  importSampleData: (datasetId: string) => void;
+  importSampleData: (datasetId: string, name?: string, description?: string) => void;
   currentView: string;
   setCurrentView: (view: string) => void;
   dateRange: [number, number];
@@ -39,12 +39,13 @@ interface VisualizationContextType {
   analysisType: string;
   setAnalysisType: (type: string) => void;
   isAnalyzing: boolean;
+  clearDatasets: () => void;
 }
 
 const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
 
 export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [datasets, setDatasets] = useState<DataSet[]>(sampleDatasets);
+  const [datasets, setDatasets] = useState<DataSet[]>([]);
   const [activeDataset, setActiveDataset] = useState<DataSet | null>(null);
   const [selectedChart, setSelectedChart] = useState<ChartType>('bar');
   const [currentView, setCurrentView] = useState('chart');
@@ -53,12 +54,12 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [analysisType, setAnalysisType] = useState('trends');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Auto-load first dataset when component mounts
-  useEffect(() => {
-    if (datasets.length > 0 && !activeDataset) {
-      loadDataset(datasets[0].id);
-    }
-  }, [datasets]);
+  // Clear all datasets
+  const clearDatasets = () => {
+    setDatasets([]);
+    setActiveDataset(null);
+    setAnalyzedData(null);
+  };
 
   const loadDataset = (datasetId: string) => {
     const dataset = datasets.find(d => d.id === datasetId);
@@ -71,27 +72,27 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const importSampleData = (datasetId: string) => {
-    const dataset = sampleDatasets.find(d => d.id === datasetId);
-    if (dataset) {
+  const importSampleData = (datasetId: string, name?: string, description?: string) => {
+    const sampleDataset = sampleDatasets.find(d => d.id === datasetId);
+    if (sampleDataset) {
       // Create a fresh copy with new random data
       const newDataset = {
-        ...dataset,
+        ...sampleDataset,
+        name: name || sampleDataset.name,
+        description: description || sampleDataset.description,
         data: generateSampleData(),
         lastUpdated: new Date()
       };
       
       setActiveDataset(newDataset);
       
-      // Also add to datasets if not already there
-      if (!datasets.some(d => d.id === datasetId)) {
-        setDatasets(prev => [...prev, newDataset]);
-      } else {
-        // Update existing dataset
-        setDatasets(prev => prev.map(d => d.id === datasetId ? newDataset : d));
-      }
+      // Add to datasets, replacing previous import with same ID
+      setDatasets(prev => {
+        const filteredDatasets = prev.filter(d => d.id !== datasetId);
+        return [...filteredDatasets, newDataset];
+      });
       
-      toast.success(`Imported: ${dataset.name}`);
+      toast.success(`Imported: ${newDataset.name}`);
       analyzeData();
     }
   };
@@ -148,6 +149,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         analysisType,
         setAnalysisType,
         isAnalyzing,
+        clearDatasets
       }}
     >
       {children}

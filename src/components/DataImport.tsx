@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,11 +11,18 @@ const DataImport = () => {
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>('');
-  const { importSampleData } = useVisualization();
+  const [datasetName, setDatasetName] = useState<string>('');
+  const { importSampleData, clearDatasets } = useVisualization();
+  const navigate = useNavigate();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+      const file = e.target.files[0];
+      setFileName(file.name);
+      
+      // Extract name without extension for dataset name
+      const nameWithoutExt = file.name.split('.').slice(0, -1).join('.');
+      setDatasetName(nameWithoutExt || file.name);
     }
   };
   
@@ -26,14 +34,23 @@ const DataImport = () => {
     
     setIsUploading(true);
     
+    // First clear existing datasets
+    clearDatasets();
+    
     // Simulate upload process
     setTimeout(() => {
+      const name = datasetName || fileName.split('.')[0];
+      
+      // Generate a random dataset with the file name
+      importSampleData('imported-data', name, `Imported from ${fileName}`);
+      
       toast.success(`Successfully imported ${fileName}`);
       setIsUploading(false);
       setFileName('');
+      setDatasetName('');
       
-      // Generate a random dataset
-      importSampleData('sales-data');
+      // Auto navigate to visualization section
+      navigate('/analytics');
     }, 1500);
   };
   
@@ -45,23 +62,38 @@ const DataImport = () => {
     
     setIsUploading(true);
     
+    // First clear existing datasets
+    clearDatasets();
+    
     // Simulate API connection
     setTimeout(() => {
+      // Use API URL as the dataset name
+      const apiName = new URL(apiUrl).hostname.replace('www.', '');
+      
+      importSampleData('api-data', `${apiName} Data`, `Imported from API: ${apiUrl}`);
+      
       toast.success("Successfully connected to API");
       setIsUploading(false);
+      setApiUrl('');
       
-      // Generate a random dataset
-      importSampleData('web-analytics');
+      // Auto navigate to visualization section
+      navigate('/analytics');
     }, 1500);
   };
   
   const handleSampleDataLoad = (datasetId: string) => {
     setIsUploading(true);
     
+    // First clear existing datasets
+    clearDatasets();
+    
     // Simulate loading sample data
     setTimeout(() => {
       importSampleData(datasetId);
       setIsUploading(false);
+      
+      // Auto navigate to visualization section
+      navigate('/analytics');
     }, 1000);
   };
   
@@ -98,6 +130,18 @@ const DataImport = () => {
               {isUploading ? "Uploading..." : "Import"}
             </Button>
           </div>
+          
+          {fileName && (
+            <div className="flex gap-2 items-center">
+              <Input
+                type="text"
+                placeholder="Dataset name (optional)"
+                value={datasetName}
+                onChange={(e) => setDatasetName(e.target.value)}
+                className="flex-1"
+              />
+            </div>
+          )}
           
           <p className="text-xs text-muted-foreground">
             Supported formats: CSV, Excel (.xlsx), JSON. Max size: 10MB
