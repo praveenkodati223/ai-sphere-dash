@@ -4,8 +4,11 @@ import Visualizations from './Visualizations';
 import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
 import DataImport from './DataImport';
+import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Dashboard = () => {
+  const { activeDataset } = useVisualization();
+  
   return (
     <section id="dashboard" className="py-16">
       <div className="container mx-auto px-4">
@@ -33,6 +36,12 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+        
+        {!activeDataset && (
+          <div className="mt-8 text-center">
+            <p className="text-amber-400">Tip: Import a dataset above to get started with data visualization</p>
+          </div>
+        )}
       </div>
     </section>
   );

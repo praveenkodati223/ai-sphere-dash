@@ -42,6 +42,16 @@ interface VisualizationContextType {
   clearDatasets: () => void;
   availableCategories: string[];
   availableRegions: string[];
+  showOutliers: boolean;
+  setShowOutliers: (value: boolean) => void;
+  minValue: string;
+  setMinValue: (value: string) => void;
+  maxValue: string;
+  setMaxValue: (value: string) => void;
+  category: string;
+  setCategory: (value: string) => void;
+  region: string;
+  setRegion: (value: string) => void;
 }
 
 const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -57,6 +67,13 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableRegions, setAvailableRegions] = useState<string[]>([]);
+  
+  // Filter state
+  const [showOutliers, setShowOutliers] = useState<boolean>(false);
+  const [minValue, setMinValue] = useState<string>('0');
+  const [maxValue, setMaxValue] = useState<string>('1000');
+  const [category, setCategory] = useState<string>('all');
+  const [region, setRegion] = useState<string>('all');
 
   // Clear all datasets
   const clearDatasets = () => {
@@ -158,6 +175,44 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     
     setIsAnalyzing(true);
     
+    // Apply filters to get filtered data
+    let filteredData = [...activeDataset.data];
+    
+    // Apply category filter
+    if (category !== 'all') {
+      filteredData = filteredData.filter(item => item.category === category);
+    }
+    
+    // Apply region filter
+    if (region !== 'all') {
+      filteredData = filteredData.filter(item => item.region === region);
+    }
+    
+    // Apply min/max value filters
+    const minValueNum = parseFloat(minValue);
+    const maxValueNum = parseFloat(maxValue);
+    
+    if (!isNaN(minValueNum)) {
+      filteredData = filteredData.filter(item => {
+        const itemValue = item.value || (item.q1 + item.q2 + item.q3 + item.q4);
+        return itemValue >= minValueNum;
+      });
+    }
+    
+    if (!isNaN(maxValueNum)) {
+      filteredData = filteredData.filter(item => {
+        const itemValue = item.value || (item.q1 + item.q2 + item.q3 + item.q4);
+        return itemValue <= maxValueNum;
+      });
+    }
+    
+    // Check if we have data after filtering
+    if (filteredData.length === 0) {
+      setIsAnalyzing(false);
+      toast.error('No data matches your filter criteria');
+      return;
+    }
+    
     // Simulate analysis process
     setTimeout(() => {
       try {
@@ -165,20 +220,20 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         let result: any = {
           summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
           metrics: {
-            total: activeDataset.data.reduce((sum, item) => sum + (item.value || 
+            total: filteredData.reduce((sum, item) => sum + (item.value || 
               (item.q1 + item.q2 + item.q3 + item.q4)), 0),
-            average: Math.round(activeDataset.data.reduce((sum, item) => sum + (item.value || 
-              (item.q1 + item.q2 + item.q3 + item.q4)), 0) / activeDataset.data.length),
-            max: Math.max(...activeDataset.data.map(item => item.value || 
+            average: Math.round(filteredData.reduce((sum, item) => sum + (item.value || 
+              (item.q1 + item.q2 + item.q3 + item.q4)), 0) / filteredData.length),
+            max: Math.max(...filteredData.map(item => item.value || 
               (item.q1 + item.q2 + item.q3 + item.q4))),
-            min: Math.min(...activeDataset.data.map(item => item.value || 
+            min: Math.min(...filteredData.map(item => item.value || 
               (item.q1 + item.q2 + item.q3 + item.q4)))
           },
-          breakdown: activeDataset.data.map(item => ({
+          breakdown: filteredData.map(item => ({
             category: item.category,
             value: item.value || (item.q1 + item.q2 + item.q3 + item.q4),
             percentage: Math.round(((item.value || (item.q1 + item.q2 + item.q3 + item.q4)) / 
-              activeDataset.data.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
+              filteredData.reduce((sum, i) => sum + (i.value || (i.q1 + i.q2 + i.q3 + i.q4)), 0)) * 100)
           })).sort((a, b) => b.value - a.value),
           insights: []
         };
@@ -187,7 +242,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         switch(analysisType) {
           case 'trends':
             result.trendData = {
-              growthRate: Math.round(Math.random() * 20),
+              growthRate: Math.round(Math.random() * 20 + 5),
               seasonality: Math.random() > 0.5 ? "Strong" : "Moderate",
               forecast: "Upward"
             };
@@ -203,7 +258,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
             result.predictionData = {
               confidenceInterval: [Math.round(result.metrics.average * 0.85), Math.round(result.metrics.average * 1.15)],
               forecastPeriod: "Next Quarter",
-              predictedGrowth: Math.round(Math.random() * 25),
+              predictedGrowth: Math.round(Math.random() * 25 + 10),
               riskFactor: Math.round(Math.random() * 100)
             };
             result.insights = [
@@ -216,9 +271,9 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
           
           case 'correlations':
             result.correlationData = {
-              strongestCorrelation: Math.round(Math.random() * 50 + 50) / 100,
+              strongestCorrelation: (Math.round(Math.random() * 50 + 50) / 100).toFixed(2),
               factorsAnalyzed: Math.round(Math.random() * 10 + 5),
-              primaryDriver: result.breakdown[Math.floor(Math.random() * result.breakdown.length)]?.category || 'Unknown'
+              primaryDriver: result.breakdown[Math.floor(Math.random() * Math.min(result.breakdown.length, 3))]?.category || 'Unknown'
             };
             result.insights = [
               `Strong correlation (${result.correlationData.strongestCorrelation}) found between categories`,
@@ -283,7 +338,17 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         isAnalyzing,
         clearDatasets,
         availableCategories,
-        availableRegions
+        availableRegions,
+        showOutliers,
+        setShowOutliers,
+        minValue,
+        setMinValue,
+        maxValue,
+        setMaxValue,
+        category,
+        setCategory,
+        region,
+        setRegion
       }}
     >
       {children}

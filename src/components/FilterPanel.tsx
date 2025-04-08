@@ -22,14 +22,18 @@ const FilterPanel = () => {
     availableCategories, 
     availableRegions,
     activeDataset,
-    analyzeData
+    analyzeData,
+    showOutliers,
+    setShowOutliers,
+    minValue,
+    setMinValue,
+    maxValue,
+    setMaxValue,
+    category,
+    setCategory,
+    region,
+    setRegion
   } = useVisualization();
-  
-  const [showOutliers, setShowOutliers] = React.useState<boolean>(false);
-  const [minValue, setMinValue] = React.useState<string>('0');
-  const [maxValue, setMaxValue] = React.useState<string>('1000');
-  const [category, setCategory] = React.useState<string>('all');
-  const [region, setRegion] = React.useState<string>('all');
   
   // Reset filters when dataset changes
   useEffect(() => {
@@ -53,7 +57,7 @@ const FilterPanel = () => {
       console.log("Available categories:", availableCategories);
       console.log("Available regions:", availableRegions);
     }
-  }, [activeDataset, setDateRange, availableCategories, availableRegions]);
+  }, [activeDataset, setDateRange, availableCategories, availableRegions, setMinValue, setMaxValue, setCategory, setRegion]);
   
   const handleReset = () => {
     if (activeDataset) {

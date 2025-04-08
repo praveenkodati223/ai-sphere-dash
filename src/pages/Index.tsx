@@ -1,10 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import Dashboard from '../components/Dashboard';
+import { useNavigate } from 'react-router-dom';
+import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Index = () => {
+  const { importSampleData } = useVisualization();
+  const navigate = useNavigate();
+  
+  // Auto import sample data for demonstration purposes
+  useEffect(() => {
+    // Automatically import a sample dataset for demo purposes
+    importSampleData('sales-data');
+  }, [importSampleData]);
+  
   return (
     <div className="min-h-screen bg-sphere-dark">
       <Header />
@@ -23,9 +34,18 @@ const Index = () => {
             The next generation data visualization platform with AI-powered insights
           </p>
           <div className="flex justify-center gap-6 text-sm text-slate-400">
-            <a href="#" className="hover:text-white transition">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition">Terms of Service</a>
-            <a href="#" className="hover:text-white transition">Contact</a>
+            <a href="#" className="hover:text-white transition" onClick={(e) => {
+              e.preventDefault();
+              navigate('/docs');
+            }}>Privacy Policy</a>
+            <a href="#" className="hover:text-white transition" onClick={(e) => {
+              e.preventDefault();
+              navigate('/docs');
+            }}>Terms of Service</a>
+            <a href="#" className="hover:text-white transition" onClick={(e) => {
+              e.preventDefault();
+              navigate('/docs');
+            }}>Contact</a>
           </div>
           <p className="mt-6 text-xs text-slate-500">
             © {new Date().getFullYear()} Sphere AI. All rights reserved.
