@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Visualizations from './Visualizations';
 import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
@@ -7,7 +7,14 @@ import DataImport from './DataImport';
 import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Dashboard = () => {
-  const { activeDataset } = useVisualization();
+  const { activeDataset, analyzeData } = useVisualization();
+  
+  // Make sure we analyze data when the dashboard is loaded
+  useEffect(() => {
+    if (activeDataset) {
+      analyzeData();
+    }
+  }, [activeDataset]);
   
   return (
     <section id="dashboard" className="py-16">
@@ -40,6 +47,13 @@ const Dashboard = () => {
         {!activeDataset && (
           <div className="mt-8 text-center">
             <p className="text-amber-400">Tip: Import a dataset above to get started with data visualization</p>
+          </div>
+        )}
+        
+        {activeDataset && (
+          <div className="mt-8 text-center">
+            <p className="text-green-400">Currently visualizing: {activeDataset.name}</p>
+            <p className="text-xs text-slate-400 mt-1">{activeDataset.description}</p>
           </div>
         )}
       </div>

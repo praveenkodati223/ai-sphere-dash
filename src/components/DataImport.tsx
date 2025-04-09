@@ -14,7 +14,7 @@ const DataImport = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [apiUrl, setApiUrl] = useState<string>('');
   const [datasetName, setDatasetName] = useState<string>('');
-  const { importSampleData, clearDatasets, analyzeData, setAnalysisType } = useVisualization();
+  const { importSampleData, clearDatasets, analyzeData, setAnalysisType, importCustomData } = useVisualization();
   const navigate = useNavigate();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,12 +47,12 @@ const DataImport = () => {
     // First clear existing datasets
     clearDatasets();
     
-    // Simulate upload process with longer timeout to emulate large file processing
+    // Simulate file reading and generate custom data based on filename
     setTimeout(() => {
       const name = datasetName || fileName.split('.')[0];
       
-      // Generate a random dataset with the file name
-      importSampleData('imported-data', name, `Imported from ${fileName}`);
+      // Generate completely new random data based on the file name seed
+      importCustomData(name, `Imported from ${fileName}`);
       
       toast.success(`Successfully imported ${fileName}`);
       setIsUploading(false);
@@ -63,7 +63,7 @@ const DataImport = () => {
       setAnalysisType('trends');
       
       // Navigate to analytics page and force a refresh
-      navigate('/analytics?refresh=' + Date.now());
+      navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
     }, 1500);
   };
   
@@ -84,7 +84,8 @@ const DataImport = () => {
         // Use API URL as the dataset name
         const apiName = new URL(apiUrl).hostname.replace('www.', '');
         
-        importSampleData('api-data', `${apiName} Data`, `Imported from API: ${apiUrl}`);
+        // Generate completely new random data based on the API URL
+        importCustomData(`${apiName} Data`, `Imported from API: ${apiUrl}`);
         
         toast.success("Successfully connected to API");
         setIsUploading(false);

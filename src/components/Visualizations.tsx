@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,12 +31,7 @@ import {
 import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { sampleCategories } from '@/services/dataService';
 
 const Visualizations = () => {
   const { 
@@ -58,9 +52,9 @@ const Visualizations = () => {
     }
   }, [activeDataset, analyzedData]);
   
-  // Create a fallback for sample data in case categories are not available
-  const fallbackCategories = ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'];
-  const categories = activeDataset?.data.map(item => item.category) || fallbackCategories;
+  // Use dataset categories if available, fall back to sample if not
+  const datasetCategories = activeDataset?.data.map(item => item.category) || [];
+  const categories = datasetCategories.length > 0 ? datasetCategories : sampleCategories;
   
   const chartGroups = [
     {
@@ -144,9 +138,16 @@ const Visualizations = () => {
   };
 
   const handleExportData = () => {
+    if (!activeDataset) {
+      toast.error("No data to export. Please import a dataset first.");
+      return;
+    }
+    
     toast.success("Data export started");
+    
     setTimeout(() => {
-      toast.success("Data exported successfully");
+      const fileName = `${activeDataset.name.replace(/\s+/g, '_').toLowerCase()}_export_${new Date().toISOString().slice(0,10)}.csv`;
+      toast.success(`Data exported successfully as ${fileName}`);
     }, 1500);
   };
   
@@ -228,20 +229,21 @@ const Visualizations = () => {
         
         <TabsContent value="data" className="mt-0 p-0">
           <div className="h-[350px] overflow-auto px-4">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left p-2">Category</th>
-                  <th className="text-left p-2">Q1</th>
-                  <th className="text-left p-2">Q2</th>
-                  <th className="text-left p-2">Q3</th>
-                  <th className="text-left p-2">Q4</th>
-                  <th className="text-left p-2">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeDataset ? (
-                  activeDataset.data.map((item, idx) => {
+            {activeDataset ? (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left p-2">Category</th>
+                    <th className="text-left p-2">Q1</th>
+                    <th className="text-left p-2">Q2</th>
+                    <th className="text-left p-2">Q3</th>
+                    <th className="text-left p-2">Q4</th>
+                    <th className="text-left p-2">Total</th>
+                    {activeDataset.data[0]?.region && <th className="text-left p-2">Region</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeDataset.data.map((item, idx) => {
                     const total = item.q1 + item.q2 + item.q3 + item.q4;
                     return (
                       <tr key={idx} className="border-b border-white/5">
@@ -251,23 +253,27 @@ const Visualizations = () => {
                         <td className="p-2">{item.q3.toLocaleString()}</td>
                         <td className="p-2">{item.q4.toLocaleString()}</td>
                         <td className="p-2 font-bold">{total.toLocaleString()}</td>
+                        {item.region && <td className="p-2">{item.region}</td>}
                       </tr>
                     );
-                  })
-                ) : (
-                  categories.map((category, idx) => (
-                    <tr key={idx} className="border-b border-white/5">
-                      <td className="p-2">{category || `Category ${idx+1}`}</td>
-                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                      <td className="p-2">{Math.floor(Math.random() * 1000)}</td>
-                      <td className="p-2">-</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg mb-2">No data available</div>
+                  <p className="text-sm text-slate-400 mb-4">Import a dataset to view data</p>
+                  <Button 
+                    onClick={() => toast.info("Please import a dataset first")} 
+                    variant="outline" 
+                    className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+                  >
+                    Import Data
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
         
@@ -339,7 +345,6 @@ const Visualizations = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Show additional analysis data based on the analysis type */}
                 {analyzedData.trendData && (
                   <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
                     <CardHeader>

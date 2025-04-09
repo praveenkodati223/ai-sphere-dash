@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { DataSet, sampleDatasets, generateSampleData } from '@/services/dataService';
+import { DataSet, sampleDatasets, generateSampleData, generateCustomData } from '@/services/dataService';
 import { toast } from "sonner";
 
 export type ChartType = 
@@ -30,6 +30,7 @@ interface VisualizationContextType {
   setSelectedChart: (chart: ChartType) => void;
   loadDataset: (datasetId: string) => void;
   importSampleData: (datasetId: string, name?: string, description?: string) => void;
+  importCustomData: (name: string, description: string) => void;
   currentView: string;
   setCurrentView: (view: string) => void;
   dateRange: [number, number];
@@ -117,6 +118,20 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       // When dataset changes, make sure we're showing the chart view
       setCurrentView('chart');
       
+      // Reset filters
+      setCategory('all');
+      setRegion('all');
+      
+      // Calculate min and max values from dataset
+      const values = activeDataset.data.map(item => item.value || 
+        (item.q1 + item.q2 + item.q3 + item.q4));
+      
+      const min = Math.floor(Math.min(...values));
+      const max = Math.ceil(Math.max(...values));
+      
+      setMinValue(min.toString());
+      setMaxValue(max.toString());
+      
       // Auto analyze when dataset changes
       analyzeData();
     }
@@ -165,6 +180,31 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     
     console.error("Sample dataset not found:", datasetId);
     return false;
+  };
+
+  const importCustomData = (name: string, description: string) => {
+    // Create a custom dataset with unique categories and regions
+    const customData = generateCustomData(name);
+    
+    const newDataset: DataSet = {
+      id: `custom-${Date.now()}`,
+      name: name,
+      description: description,
+      data: customData,
+      lastUpdated: new Date()
+    };
+    
+    // Add to datasets
+    setDatasets(prev => [...prev, newDataset]);
+    
+    // Set as active dataset
+    setActiveDataset(newDataset);
+    
+    // Make sure we reset the analysis data
+    setAnalyzedData(null);
+    
+    console.log("Custom dataset imported and activated:", newDataset);
+    return true;
   };
 
   const analyzeData = () => {
@@ -216,7 +256,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     // Simulate analysis process
     setTimeout(() => {
       try {
-        // Generate different analysis results based on analysis type
+        // Create basic metrics common to all analysis types
         let result: any = {
           summary: `Analysis of ${activeDataset.name} - ${analysisType}`,
           metrics: {
@@ -238,42 +278,54 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
           insights: []
         };
         
-        // Generate different insights based on analysis type
+        // Generate different insights and data based on analysis type
         switch(analysisType) {
           case 'trends':
+            // For trends analysis, focus on growth rates and patterns
+            const trendGrowthRate = Math.round(Math.random() * 20 + 5);
             result.trendData = {
-              growthRate: Math.round(Math.random() * 20 + 5),
+              growthRate: trendGrowthRate,
               seasonality: Math.random() > 0.5 ? "Strong" : "Moderate",
-              forecast: "Upward"
+              forecast: trendGrowthRate > 15 ? "Strongly Upward" : "Moderately Upward"
             };
             result.insights = [
               `${result.breakdown[0]?.category || 'Product'} shows the highest upward trend with ${result.trendData.growthRate}% growth`,
               'Strong upward trend detected in recent data',
               'Consider investigating seasonal patterns in the time series data',
-              'Month-over-month growth is accelerating'
+              `Month-over-month growth is ${trendGrowthRate > 15 ? 'accelerating' : 'steady'}`
             ];
             break;
           
           case 'predictions':
+            // For predictions, focus on future forecasts and confidence intervals
+            const predictedGrowth = Math.round(Math.random() * 25 + 10);
             result.predictionData = {
               confidenceInterval: [Math.round(result.metrics.average * 0.85), Math.round(result.metrics.average * 1.15)],
               forecastPeriod: "Next Quarter",
-              predictedGrowth: Math.round(Math.random() * 25 + 10),
-              riskFactor: Math.round(Math.random() * 100)
+              predictedGrowth: predictedGrowth,
+              riskFactor: Math.round(Math.random() * 100),
+              marketConditions: predictedGrowth > 20 ? "Highly Favorable" : "Favorable"
             };
             result.insights = [
               `Future growth projected at ${result.predictionData.predictedGrowth}% for next quarter`,
-              'Market conditions suggest favorable environment for expansion',
+              `Market conditions suggest ${result.predictionData.marketConditions} environment for expansion`,
               `Predicted value range: ${result.predictionData.confidenceInterval[0]}-${result.predictionData.confidenceInterval[1]}`,
               `Risk assessment score: ${result.predictionData.riskFactor}/100`
             ];
             break;
           
           case 'correlations':
+            // For correlations, focus on relationships between variables
+            const correlation = (Math.round(Math.random() * 50 + 50) / 100).toFixed(2);
+            const factorsAnalyzed = Math.round(Math.random() * 10 + 5);
+            const topCategory = result.breakdown[0]?.category || 'Unknown';
             result.correlationData = {
-              strongestCorrelation: (Math.round(Math.random() * 50 + 50) / 100).toFixed(2),
-              factorsAnalyzed: Math.round(Math.random() * 10 + 5),
-              primaryDriver: result.breakdown[Math.floor(Math.random() * Math.min(result.breakdown.length, 3))]?.category || 'Unknown'
+              strongestCorrelation: correlation,
+              factorsAnalyzed: factorsAnalyzed,
+              primaryDriver: topCategory,
+              secondaryFactors: filteredData.length > 1 ? 
+                filteredData.slice(1, 3).map(item => item.category) : 
+                ['Market conditions', 'Seasonal factors']
             };
             result.insights = [
               `Strong correlation (${result.correlationData.strongestCorrelation}) found between categories`,
@@ -284,17 +336,23 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
             break;
           
           case 'anomalies':
+            // For anomalies, focus on outliers and unusual patterns
             const anomalyCount = Math.floor(Math.random() * 5) + 1;
+            const confidence = Math.round(Math.random() * 30 + 70);
+            const impactScore = Math.round(Math.random() * 100);
             result.anomalyData = {
               anomaliesDetected: anomalyCount,
-              confidence: Math.round(Math.random() * 30 + 70),
-              impactScore: Math.round(Math.random() * 100),
-              detectionMethod: "Statistical outlier detection"
+              confidence: confidence,
+              impactScore: impactScore,
+              detectionMethod: "Statistical outlier detection",
+              affectedCategories: filteredData
+                .slice(0, anomalyCount)
+                .map(item => item.category)
             };
             result.insights = [
-              `${anomalyCount} anomalies detected in recent transactions`,
+              `${anomalyCount} anomalies detected in ${result.anomalyData.affectedCategories.join(", ")}`,
               `Anomaly detection confidence: ${result.anomalyData.confidence}%`,
-              'Consider investigating potential data quality issues or fraud',
+              'Consider investigating potential data quality issues or unusual market activity',
               `Impact score of detected anomalies: ${result.anomalyData.impactScore}/100`
             ];
             break;
@@ -327,6 +385,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
         setSelectedChart,
         loadDataset,
         importSampleData,
+        importCustomData,
         currentView,
         setCurrentView,
         dateRange,

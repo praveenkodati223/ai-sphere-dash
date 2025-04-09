@@ -7,14 +7,17 @@ import { useNavigate } from 'react-router-dom';
 import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Index = () => {
-  const { importSampleData } = useVisualization();
+  const { importCustomData, activeDataset } = useVisualization();
   const navigate = useNavigate();
   
-  // Auto import sample data for demonstration purposes
+  // Auto import custom data for demonstration purposes only if no active dataset
   useEffect(() => {
-    // Automatically import a sample dataset for demo purposes
-    importSampleData('sales-data');
-  }, [importSampleData]);
+    // Only import data if there's no active dataset
+    if (!activeDataset) {
+      // Import a custom dataset with a recognizable name
+      importCustomData('Demo Dashboard Data', 'This dataset is auto-loaded for demonstration purposes');
+    }
+  }, [importCustomData, activeDataset]);
   
   return (
     <div className="min-h-screen bg-sphere-dark">

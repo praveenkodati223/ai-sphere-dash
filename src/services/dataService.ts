@@ -46,6 +46,72 @@ export const generateSampleData = (): DataPoint[] => {
   });
 };
 
+// Generate custom data based on a seed (filename or other identifier)
+export const generateCustomData = (seed: string): DataPoint[] => {
+  // Use the seed to generate unique categories
+  const customCategories = generateCustomCategories(seed);
+  const customRegions = ['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East'];
+  
+  return customCategories.map(category => {
+    // Use the seed and category to create somewhat deterministic but random-looking values
+    const seedNum = Array.from(seed + category).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const randomMultiplier = (seedNum % 10) + 1;
+    
+    const q1 = Math.floor(Math.random() * 500 * randomMultiplier) + 100;
+    const q2 = Math.floor(Math.random() * 500 * randomMultiplier) + 100;
+    const q3 = Math.floor(Math.random() * 500 * randomMultiplier) + 100;
+    const q4 = Math.floor(Math.random() * 500 * randomMultiplier) + 100;
+    
+    return {
+      category,
+      q1,
+      q2,
+      q3,
+      q4,
+      value: q1 + q2 + q3 + q4, // Calculated total for convenience
+      region: customRegions[Math.floor(Math.random() * customRegions.length)],
+      subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+    };
+  });
+};
+
+// Generate unique categories based on seed
+function generateCustomCategories(seed: string): string[] {
+  // Use the seed to make different but realistic looking categories
+  const businessCategories = [
+    'Sales', 'Marketing', 'Finance', 'Operations', 'HR', 'IT', 
+    'Product', 'Customer Support', 'R&D', 'Legal', 'Engineering',
+    'Manufacturing', 'Logistics', 'Design', 'Quality Assurance'
+  ];
+  
+  const productCategories = [
+    'Smartphones', 'Laptops', 'Tablets', 'Wearables', 'Smart Home', 
+    'Audio', 'Accessories', 'Cameras', 'Gaming', 'TVs',
+    'Appliances', 'Office Equipment', 'Network Devices'
+  ];
+  
+  const retailCategories = [
+    'Apparel', 'Footwear', 'Jewelry', 'Beauty', 'Home Goods',
+    'Food & Beverage', 'Electronics', 'Sports', 'Toys', 'Books',
+    'Health', 'Automotive', 'Garden', 'Pet Supplies'
+  ];
+  
+  // Choose category set based on seed content
+  let categorySet: string[];
+  if (seed.toLowerCase().includes('business') || seed.toLowerCase().includes('report')) {
+    categorySet = businessCategories;
+  } else if (seed.toLowerCase().includes('product') || seed.toLowerCase().includes('tech')) {
+    categorySet = productCategories;
+  } else {
+    categorySet = retailCategories;
+  }
+  
+  // Shuffle and select 5-10 categories based on seed length
+  const shuffled = categorySet.sort(() => 0.5 - Math.random());
+  const numCategories = Math.max(5, Math.min(10, seed.length % 10 + 5));
+  return shuffled.slice(0, numCategories);
+}
+
 // Generate hierarchical data for treemap
 export const generateTreemapData = () => {
   return sampleCategories.flatMap(category => {
