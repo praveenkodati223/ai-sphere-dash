@@ -5,19 +5,21 @@ import Hero from '../components/Hero';
 import Dashboard from '../components/Dashboard';
 import { useNavigate } from 'react-router-dom';
 import { useVisualization } from '@/contexts/VisualizationContext';
+import { toast } from "sonner";
 
 const Index = () => {
-  const { importCustomData, activeDataset } = useVisualization();
+  const { importCustomData, activeDataset, isAnalyzing } = useVisualization();
   const navigate = useNavigate();
   
   // Auto import custom data for demonstration purposes only if no active dataset
   useEffect(() => {
-    // Only import data if there's no active dataset
-    if (!activeDataset) {
+    // Only import data if there's no active dataset and not already analyzing
+    if (!activeDataset && !isAnalyzing) {
       // Import a custom dataset with a recognizable name
       importCustomData('Demo Dashboard Data', 'This dataset is auto-loaded for demonstration purposes');
+      toast.success("Demo data loaded for preview. You can import your own data below.");
     }
-  }, [importCustomData, activeDataset]);
+  }, [importCustomData, activeDataset, isAnalyzing]);
   
   return (
     <div className="min-h-screen bg-sphere-dark">

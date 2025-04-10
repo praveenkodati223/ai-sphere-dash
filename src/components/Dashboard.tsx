@@ -5,16 +5,18 @@ import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
 import DataImport from './DataImport';
 import { useVisualization } from '@/contexts/VisualizationContext';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from 'lucide-react';
 
 const Dashboard = () => {
-  const { activeDataset, analyzeData } = useVisualization();
+  const { activeDataset, analyzeData, isAnalyzing } = useVisualization();
   
   // Make sure we analyze data when the dashboard is loaded
   useEffect(() => {
-    if (activeDataset) {
+    if (activeDataset && !isAnalyzing) {
       analyzeData();
     }
-  }, [activeDataset]);
+  }, [activeDataset, isAnalyzing, analyzeData]);
   
   return (
     <section id="dashboard" className="py-16">
@@ -28,25 +30,33 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <FilterPanel />
-              <AIPrompt />
-            </div>
-          </div>
-          
-          <div className="lg:col-span-3">
-            <div className="space-y-6">
-              <Visualizations />
+        {!activeDataset ? (
+          <div className="glass p-6 rounded-lg mb-6">
+            <Alert className="bg-blue-950/40 border-blue-500/30">
+              <InfoIcon className="h-4 w-4 text-blue-500" />
+              <AlertTitle>Getting Started</AlertTitle>
+              <AlertDescription>
+                Import a dataset below to start exploring your data with interactive visualizations.
+              </AlertDescription>
+            </Alert>
+            <div className="mt-6">
               <DataImport />
             </div>
           </div>
-        </div>
-        
-        {!activeDataset && (
-          <div className="mt-8 text-center">
-            <p className="text-amber-400">Tip: Import a dataset above to get started with data visualization</p>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <div className="space-y-6">
+                <FilterPanel />
+                <AIPrompt />
+              </div>
+            </div>
+            
+            <div className="lg:col-span-3">
+              <div className="space-y-6">
+                <Visualizations />
+              </div>
+            </div>
           </div>
         )}
         

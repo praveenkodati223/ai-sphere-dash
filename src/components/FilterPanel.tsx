@@ -32,7 +32,8 @@ const FilterPanel = () => {
     category,
     setCategory,
     region,
-    setRegion
+    setRegion,
+    isAnalyzing
   } = useVisualization();
   
   // Reset filters when dataset changes
@@ -52,12 +53,8 @@ const FilterPanel = () => {
       
       // Also reset date range to default
       setDateRange([30, 90]);
-      
-      console.log("FilterPanel: Dataset changed, resetting filters");
-      console.log("Available categories:", availableCategories);
-      console.log("Available regions:", availableRegions);
     }
-  }, [activeDataset, setDateRange, availableCategories, availableRegions, setMinValue, setMaxValue, setCategory, setRegion]);
+  }, [activeDataset, setDateRange, setMinValue, setMaxValue, setCategory, setRegion]);
   
   const handleReset = () => {
     if (activeDataset) {
@@ -86,10 +83,28 @@ const FilterPanel = () => {
   };
   
   const handleApply = () => {
+    // Validate inputs before applying
+    const minVal = parseFloat(minValue);
+    const maxVal = parseFloat(maxValue);
+    
+    if (isNaN(minVal) || isNaN(maxVal)) {
+      toast.error("Please enter valid numeric values for min and max");
+      return;
+    }
+    
+    if (minVal > maxVal) {
+      toast.error("Minimum value cannot be greater than maximum value");
+      return;
+    }
+    
     // Trigger a new analysis with the current filters
     analyzeData();
     toast.success("Filters applied to visualization");
   };
+  
+  if (!activeDataset) {
+    return null; // Don't render filter panel if no dataset
+  }
   
   return (
     <div className="glass p-6 rounded-lg space-y-5">
@@ -202,8 +217,9 @@ const FilterPanel = () => {
           <Button 
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 w-1/2"
             onClick={handleApply}
+            disabled={isAnalyzing}
           >
-            Apply
+            {isAnalyzing ? "Applying..." : "Apply"}
           </Button>
         </div>
       </div>

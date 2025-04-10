@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
-import { AlertCircle, FileIcon, InfoIcon } from 'lucide-react';
+import { AlertCircle, FileIcon, InfoIcon, Upload, Database, Book } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DataImport = () => {
@@ -62,8 +62,10 @@ const DataImport = () => {
       // Set the analysis type to trends by default
       setAnalysisType('trends');
       
-      // Navigate to analytics page and force a refresh
-      navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
+      // Force analysis to run
+      setTimeout(() => {
+        analyzeData();
+      }, 500);
     }, 1500);
   };
   
@@ -94,8 +96,10 @@ const DataImport = () => {
         // Set the analysis type to trends by default
         setAnalysisType('trends');
         
-        // Navigate to analytics page and force a refresh
-        navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
+        // Force analysis to run
+        setTimeout(() => {
+          analyzeData();
+        }, 500);
       } catch (error) {
         toast.error("Invalid URL format");
         setIsUploading(false);
@@ -117,20 +121,25 @@ const DataImport = () => {
       // Set the analysis type to trends by default
       setAnalysisType('trends');
       
-      // Navigate to analytics page and force a refresh - include view=visualization to ensure visualization is shown
-      navigate('/analytics?refresh=' + Date.now() + '&view=visualization');
+      // Force analysis to run
+      setTimeout(() => {
+        analyzeData();
+      }, 500);
     }, 1000);
   };
   
   return (
     <div className="glass p-6 rounded-lg">
-      <h3 className="text-xl font-semibold mb-4">Import Data</h3>
+      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <Database className="h-5 w-5 text-sphere-cyan" />
+        Import Data
+      </h3>
       
       <Alert className="mb-4 bg-blue-950/40 border-blue-500/30">
         <InfoIcon className="h-4 w-4 text-blue-500" />
         <AlertTitle>Pro Tip</AlertTitle>
         <AlertDescription>
-          After importing data, you'll be taken to the visualization page where you can explore your data with various chart types and analysis tools.
+          After importing data, you can explore your dataset with various chart types and analysis tools.
         </AlertDescription>
       </Alert>
       
@@ -159,9 +168,14 @@ const DataImport = () => {
             <Button 
               onClick={handleUpload} 
               disabled={!fileName || isUploading}
-              className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
+              className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center"
             >
-              {isUploading ? "Uploading..." : "Import"}
+              {isUploading ? "Uploading..." : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  Import
+                </>
+              )}
             </Button>
           </div>
           
@@ -209,10 +223,10 @@ const DataImport = () => {
             <Button 
               variant="outline" 
               className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
-              disabled={isUploading}
+              disabled={isUploading || !apiUrl.trim()}
               onClick={handleApiConnect}
             >
-              Connect
+              {isUploading ? "Connecting..." : "Connect"}
             </Button>
           </div>
           
@@ -241,7 +255,10 @@ const DataImport = () => {
               disabled={isUploading}
             >
               <div className="text-left">
-                <div className="font-medium">Sales Data</div>
+                <div className="font-medium flex items-center gap-1">
+                  <Book className="h-4 w-4 text-sphere-cyan" />
+                  Sales Data
+                </div>
                 <div className="text-xs text-muted-foreground">Monthly sales data with products and categories</div>
               </div>
             </Button>
@@ -253,7 +270,10 @@ const DataImport = () => {
               disabled={isUploading}
             >
               <div className="text-left">
-                <div className="font-medium">Website Analytics</div>
+                <div className="font-medium flex items-center gap-1">
+                  <Book className="h-4 w-4 text-sphere-cyan" />
+                  Website Analytics
+                </div>
                 <div className="text-xs text-muted-foreground">Visitor traffic, sources, and conversion rates</div>
               </div>
             </Button>
@@ -265,7 +285,10 @@ const DataImport = () => {
               disabled={isUploading}
             >
               <div className="text-left">
-                <div className="font-medium">Inventory Data</div>
+                <div className="font-medium flex items-center gap-1">
+                  <Book className="h-4 w-4 text-sphere-cyan" />
+                  Inventory Data
+                </div>
                 <div className="text-xs text-muted-foreground">Stock levels across categories and locations</div>
               </div>
             </Button>
@@ -277,7 +300,10 @@ const DataImport = () => {
               disabled={isUploading}
             >
               <div className="text-left">
-                <div className="font-medium">Financial Data</div>
+                <div className="font-medium flex items-center gap-1">
+                  <Book className="h-4 w-4 text-sphere-cyan" />
+                  Financial Data
+                </div>
                 <div className="text-xs text-muted-foreground">Revenue and expense data with quarterly breakdown</div>
               </div>
             </Button>
