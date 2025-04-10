@@ -97,9 +97,14 @@ const FilterPanel = () => {
       return;
     }
     
-    // Trigger a new analysis with the current filters
-    analyzeData();
-    toast.success("Filters applied to visualization");
+    try {
+      // Trigger a new analysis with the current filters
+      analyzeData();
+      toast.success("Filters applied to visualization");
+    } catch (error) {
+      console.error("Error applying filters:", error);
+      toast.error("Failed to apply filters. Please try again.");
+    }
   };
   
   if (!activeDataset) {
@@ -218,6 +223,7 @@ const FilterPanel = () => {
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 w-1/2"
             onClick={handleApply}
             disabled={isAnalyzing}
+            isLoading={isAnalyzing}
           >
             {isAnalyzing ? "Applying..." : "Apply"}
           </Button>
