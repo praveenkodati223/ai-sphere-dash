@@ -11,7 +11,7 @@ import { InfoIcon } from 'lucide-react';
 const Dashboard = () => {
   const { activeDataset, analyzeData, isAnalyzing } = useVisualization();
   
-  // Make sure we analyze data when the dashboard is loaded
+  // Make sure we analyze data when the dashboard is loaded with active dataset
   useEffect(() => {
     if (activeDataset && !isAnalyzing) {
       analyzeData();
@@ -47,7 +47,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
               <div className="space-y-6">
-                <FilterPanel />
+                {activeDataset && <FilterPanel />}
                 <AIPrompt />
               </div>
             </div>

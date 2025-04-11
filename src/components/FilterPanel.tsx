@@ -71,14 +71,6 @@ const FilterPanel = () => {
       setRegion('all');
       setDateRange([30, 90]);
       toast.success("Filters reset to match your imported data");
-    } else {
-      setShowOutliers(false);
-      setMinValue('0');
-      setMaxValue('1000');
-      setCategory('all');
-      setRegion('all');
-      setDateRange([30, 90]);
-      toast.success("Filters reset to default");
     }
   };
   
@@ -223,7 +215,6 @@ const FilterPanel = () => {
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 w-1/2"
             onClick={handleApply}
             disabled={isAnalyzing}
-            isLoading={isAnalyzing}
           >
             {isAnalyzing ? "Applying..." : "Apply"}
           </Button>
