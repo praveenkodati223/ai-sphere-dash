@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Visualizations from './Visualizations';
 import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
@@ -9,14 +9,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from 'lucide-react';
 
 const Dashboard = () => {
-  const { activeDataset, analyzeData, isAnalyzing } = useVisualization();
+  const { activeDataset } = useVisualization();
   
-  // Make sure we analyze data when the dashboard is loaded with active dataset
-  useEffect(() => {
-    if (activeDataset && !isAnalyzing) {
-      analyzeData();
-    }
-  }, [activeDataset, isAnalyzing, analyzeData]);
+  // Removed the automatic analysis useEffect
   
   return (
     <section id="dashboard" className="py-16">

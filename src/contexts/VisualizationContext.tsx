@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DataSet, sampleDatasets, generateSampleData, generateCustomData } from '@/services/dataService';
 import { toast } from "sonner";
@@ -84,7 +85,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     setAvailableRegions([]);
   }, []);
 
-  // Extract available categories and regions when dataset changes
+  // Extract available categories and regions when dataset changes, but don't auto-analyze
   useEffect(() => {
     if (activeDataset) {
       console.log("Active dataset changed:", activeDataset.name);
@@ -131,8 +132,11 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       setMinValue(min.toString());
       setMaxValue(max.toString());
       
-      // Auto analyze when dataset changes
-      analyzeData();
+      // Removed auto analysis when dataset changes
+      // Now waiting for explicit user action
+      
+      // Clear any previous analysis data
+      setAnalyzedData(null);
     }
   }, [activeDataset]);
 
@@ -141,7 +145,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     if (dataset) {
       setActiveDataset(dataset);
       toast.success(`Loaded dataset: ${dataset.name}`);
-      // Analysis will be triggered by the useEffect
+      // Analysis will now only happen when explicitly requested
     } else {
       toast.error('Dataset not found');
     }
@@ -170,7 +174,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       
       toast.success(`Imported: ${newDataset.name}`);
       
-      // Make sure we reset the analysis data
+      // Make sure we reset the analysis data - no auto analysis
       setAnalyzedData(null);
       
       console.log("Dataset imported and activated:", newDataset);
@@ -199,7 +203,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
     // Set as active dataset
     setActiveDataset(newDataset);
     
-    // Make sure we reset the analysis data
+    // Make sure we reset the analysis data - no auto analysis
     setAnalyzedData(null);
     
     console.log("Custom dataset imported and activated:", newDataset);
@@ -412,10 +416,8 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
           toast.success('Analysis complete!');
           
           // After successful analysis, ensure insights are visible
-          // Only switch to insights view on initial analysis
-          if (!analyzedData) {
-            setCurrentView('insights');
-          }
+          // Switch to insights view on analysis
+          setCurrentView('insights');
           
         } catch (error) {
           console.error("Error analyzing data:", error);
@@ -428,7 +430,7 @@ export const VisualizationProvider: React.FC<{ children: React.ReactNode }> = ({
       toast.error("Error applying filters. Please try again.");
       setIsAnalyzing(false);
     }
-  }, [activeDataset, analysisType, category, region, minValue, maxValue, analyzedData, setCurrentView]);
+  }, [activeDataset, analysisType, category, region, minValue, maxValue, setCurrentView]);
 
   return (
     <VisualizationContext.Provider

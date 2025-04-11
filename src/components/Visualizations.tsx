@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -26,7 +27,8 @@ import {
   ActivityIcon,
   GaugeIcon,
   Download,
-  InfoIcon
+  InfoIcon,
+  PlayIcon
 } from "lucide-react";
 import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
@@ -45,12 +47,7 @@ const Visualizations = () => {
     isAnalyzing
   } = useVisualization();
   
-  useEffect(() => {
-    // Trigger analysis when component mounts or activeDataset changes
-    if (activeDataset && !analyzedData) {
-      analyzeData();
-    }
-  }, [activeDataset, analyzedData]);
+  // Removed the auto-analysis useEffect - No auto-visualization now
   
   // Use dataset categories if available, fall back to sample if not
   const datasetCategories = activeDataset?.data.map(item => item.category) || [];
@@ -150,6 +147,16 @@ const Visualizations = () => {
       toast.success(`Data exported successfully as ${fileName}`);
     }, 1500);
   };
+
+  const handleStartVisualization = () => {
+    if (!activeDataset) {
+      toast.error("Please import a dataset first");
+      return;
+    }
+    
+    analyzeData();
+    toast.success("Starting visualization process...");
+  };
   
   return (
     <div className="glass rounded-lg overflow-hidden">
@@ -223,13 +230,47 @@ const Visualizations = () => {
       <Tabs value={currentView} className="w-full">
         <TabsContent value="chart" className="mt-0 p-0">
           <div className="p-4 h-[350px] flex items-center justify-center">
-            <ChartComponent type={selectedChart} />
+            {!analyzedData && !isAnalyzing ? (
+              <div className="text-center">
+                <p className="text-lg mb-4">Select visualization options and click start</p>
+                <Button 
+                  className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                  onClick={handleStartVisualization}
+                >
+                  <PlayIcon className="h-4 w-4" />
+                  Start Visualization
+                </Button>
+              </div>
+            ) : (
+              <ChartComponent type={selectedChart} />
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="data" className="mt-0 p-0">
           <div className="h-[350px] overflow-auto px-4">
-            {activeDataset ? (
+            {!activeDataset ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg mb-2">No data available</div>
+                  <p className="text-sm text-slate-400 mb-4">Import a dataset to view data</p>
+                </div>
+              </div>
+            ) : !analyzedData && !isAnalyzing ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg mb-2">Data ready for visualization</div>
+                  <p className="text-sm text-slate-400 mb-4">Click Start Visualization to analyze and display your data</p>
+                  <Button 
+                    className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                    onClick={handleStartVisualization}
+                  >
+                    <PlayIcon className="h-4 w-4" />
+                    Start Visualization
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
@@ -259,20 +300,6 @@ const Visualizations = () => {
                   })}
                 </tbody>
               </table>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="text-lg mb-2">No data available</div>
-                  <p className="text-sm text-slate-400 mb-4">Import a dataset to view data</p>
-                  <Button 
-                    onClick={() => toast.info("Please import a dataset first")} 
-                    variant="outline" 
-                    className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
-                  >
-                    Import Data
-                  </Button>
-                </div>
-              </div>
             )}
           </div>
         </TabsContent>
@@ -286,7 +313,21 @@ const Visualizations = () => {
                   <div className="animate-pulse text-sphere-cyan">This may take a moment</div>
                 </div>
               </div>
-            ) : analyzedData ? (
+            ) : !analyzedData ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg mb-2">No insights available</div>
+                  <p className="text-sm text-slate-400 mb-4">Click Start Visualization to analyze and generate insights</p>
+                  <Button 
+                    className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                    onClick={handleStartVisualization}
+                  >
+                    <PlayIcon className="h-4 w-4" />
+                    Start Analysis
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="bg-slate-800 border-sphere-cyan/20">
                   <CardHeader>
