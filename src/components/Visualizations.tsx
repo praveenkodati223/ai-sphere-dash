@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,9 +46,6 @@ const Visualizations = () => {
     isAnalyzing
   } = useVisualization();
   
-  // Removed the auto-analysis useEffect - No auto-visualization now
-  
-  // Use dataset categories if available, fall back to sample if not
   const datasetCategories = activeDataset?.data.map(item => item.category) || [];
   const categories = datasetCategories.length > 0 ? datasetCategories : sampleCategories;
   
