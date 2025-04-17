@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +35,7 @@ import { toast } from "sonner";
 import { sampleCategories } from '@/services/dataService';
 
 const Visualizations = () => {
+  
   const { 
     selectedChart, 
     setSelectedChart, 

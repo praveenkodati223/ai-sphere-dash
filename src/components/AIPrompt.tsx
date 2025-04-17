@@ -6,18 +6,111 @@ import { ArrowRight, BrainCircuit } from "lucide-react";
 import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
 
+// Define the visualization query parser response structure
+interface QueryParserResponse {
+  chart_type: string;
+  x_axis: string;
+  y_axis: string;
+  aggregation: 'sum' | 'avg' | 'count' | 'min' | 'max';
+  title: string;
+}
+
 const AIPrompt = () => {
   const [promptInput, setPromptInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { activeDataset, setSelectedChart, setAnalysisType, analyzeData, setCurrentView } = useVisualization();
+  const { 
+    activeDataset, 
+    setSelectedChart, 
+    setAnalysisType, 
+    analyzeData, 
+    setCurrentView 
+  } = useVisualization();
   
   const aiSuggestions = [
     "Show me sales trends over the last 3 months",
     "Compare regional performance in a bar chart",
     "Identify top-performing products",
-    "Find any anomalies in the data"
+    "Show total sales by category"
   ];
   
+  // Parse natural language query to determine visualization parameters
+  const parseQuery = (query: string): QueryParserResponse => {
+    // Convert to lowercase for easier pattern matching
+    const lowercaseQuery = query.toLowerCase();
+    
+    // Default response
+    let response: QueryParserResponse = {
+      chart_type: "bar",
+      x_axis: "Category",
+      y_axis: "Value",
+      aggregation: "sum",
+      title: "Data Visualization"
+    };
+    
+    // Detect chart type
+    if (lowercaseQuery.includes('trend') || lowercaseQuery.includes('over time')) {
+      response.chart_type = 'line';
+    } else if (lowercaseQuery.includes('compare') || lowercaseQuery.includes('comparison')) {
+      response.chart_type = 'bar';
+    } else if (lowercaseQuery.includes('distribution') || lowercaseQuery.includes('breakdown')) {
+      response.chart_type = 'pie';
+    } else if (lowercaseQuery.includes('correlation') || lowercaseQuery.includes('relationship')) {
+      response.chart_type = 'scatter';
+    } else if (lowercaseQuery.includes('proportion') || lowercaseQuery.includes('percentage')) {
+      response.chart_type = 'pie';
+    }
+    
+    // Detect aggregation method
+    if (lowercaseQuery.includes('average') || lowercaseQuery.includes('mean')) {
+      response.aggregation = 'avg';
+    } else if (lowercaseQuery.includes('count')) {
+      response.aggregation = 'count';
+    } else if (lowercaseQuery.includes('minimum') || lowercaseQuery.includes('min')) {
+      response.aggregation = 'min';
+    } else if (lowercaseQuery.includes('maximum') || lowercaseQuery.includes('max')) {
+      response.aggregation = 'max';
+    } else {
+      response.aggregation = 'sum';  // Default to sum
+    }
+    
+    // Detect axes and title based on common patterns
+    if (lowercaseQuery.includes('by')) {
+      const parts = lowercaseQuery.split('by');
+      if (parts.length >= 2) {
+        // Try to determine y-axis (what to measure)
+        const measure = parts[0].trim();
+        if (measure.includes('sales')) {
+          response.y_axis = 'Sales';
+        } else if (measure.includes('revenue')) {
+          response.y_axis = 'Revenue';
+        } else if (measure.includes('profit')) {
+          response.y_axis = 'Profit';
+        } else if (measure.includes('cost')) {
+          response.y_axis = 'Cost';
+        }
+        
+        // Try to determine x-axis (how to group)
+        const dimension = parts[1].trim();
+        if (dimension.includes('category') || dimension.includes('categories')) {
+          response.x_axis = 'Category';
+        } else if (dimension.includes('region') || dimension.includes('location')) {
+          response.x_axis = 'Region';
+        } else if (dimension.includes('month') || dimension.includes('time')) {
+          response.x_axis = 'Month';
+          response.chart_type = 'line'; // Time series are usually best as line charts
+        } else if (dimension.includes('product')) {
+          response.x_axis = 'Product';
+        }
+        
+        // Generate a sensible title
+        response.title = `${response.y_axis} by ${response.x_axis}`;
+      }
+    }
+    
+    console.log("Query parser output:", response);
+    return response;
+  };
+
   const handlePromptSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -33,48 +126,50 @@ const AIPrompt = () => {
     
     setIsProcessing(true);
     
-    // Process the AI query based on content
+    // Process the query and get visualization parameters
+    const queryAnalysis = parseQuery(promptInput);
+    
+    // Using setTimeout to simulate processing time
     setTimeout(() => {
-      const lowercasePrompt = promptInput.toLowerCase();
-      
-      // Simple pattern matching to determine what the user wants
-      if (lowercasePrompt.includes('trend') || lowercasePrompt.includes('over time')) {
-        setSelectedChart('line');
-        setAnalysisType('trends');
-        toast.success("Showing trend analysis in line chart");
-      } 
-      else if (lowercasePrompt.includes('compare') || lowercasePrompt.includes('comparison')) {
-        setSelectedChart('bar');
-        toast.success("Showing comparison in bar chart");
-      }
-      else if (lowercasePrompt.includes('region') || lowercasePrompt.includes('geographical')) {
-        setSelectedChart('pie');
-        toast.success("Showing regional breakdown in pie chart");
-      }
-      else if (lowercasePrompt.includes('anomaly') || lowercasePrompt.includes('unusual')) {
-        setSelectedChart('scatter');
-        setAnalysisType('anomalies');
-        toast.success("Running anomaly detection");
-      }
-      else if (lowercasePrompt.includes('predict') || lowercasePrompt.includes('forecast')) {
-        setSelectedChart('area');
-        setAnalysisType('predictions');
-        toast.success("Showing predictions with area chart");
-      }
-      else if (lowercasePrompt.includes('correlate') || lowercasePrompt.includes('relationship')) {
-        setSelectedChart('scatter');
-        setAnalysisType('correlations');
-        toast.success("Analyzing correlations with scatter plot");
-      }
-      else {
-        // Default behavior
-        setSelectedChart('bar');
-        toast.success("Showing data visualization");
+      // Map the chart type from the query parser to our app's chart types
+      switch(queryAnalysis.chart_type) {
+        case 'line':
+          setSelectedChart('line');
+          setAnalysisType('trends');
+          toast.success(`Showing ${queryAnalysis.title} as a line chart`);
+          break;
+        case 'bar':
+          setSelectedChart('bar');
+          setAnalysisType(queryAnalysis.aggregation === 'sum' ? 'trends' : 'correlations');
+          toast.success(`Showing ${queryAnalysis.title} as a bar chart`);
+          break;
+        case 'pie':
+          setSelectedChart('pie');
+          setAnalysisType('trends');
+          toast.success(`Showing ${queryAnalysis.title} as a pie chart`);
+          break;
+        case 'scatter':
+          setSelectedChart('scatter');
+          setAnalysisType('correlations');
+          toast.success(`Showing ${queryAnalysis.title} as a scatter plot`);
+          break;
+        default:
+          setSelectedChart('bar'); // Default to bar chart
+          toast.success(`Showing ${queryAnalysis.title}`);
       }
       
-      // Run analysis and show the insights tab
+      // Output the visualization configuration to console for debugging
+      console.log("Visualization configuration:", {
+        chart_type: queryAnalysis.chart_type,
+        x_axis: queryAnalysis.x_axis,
+        y_axis: queryAnalysis.y_axis,
+        aggregation: queryAnalysis.aggregation,
+        title: queryAnalysis.title
+      });
+      
+      // Run analysis and show the chart
       analyzeData();
-      setCurrentView('insights');
+      setCurrentView('chart');
       
       setIsProcessing(false);
       setPromptInput('');
