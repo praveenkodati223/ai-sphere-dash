@@ -1,15 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Session, User } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
@@ -20,100 +17,77 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
-    const checkUser = async () => {
-      // This will be replaced with actual Supabase session check once integrated
-      const savedUser = localStorage.getItem('sphere_user');
-      
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch (error) {
-          console.error('Failed to parse user from localStorage', error);
-        }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-      
-      setIsLoading(false);
-    };
+    );
 
-    checkUser();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setIsLoading(true);
-    
     try {
-      // Mock auth - will be replaced with Supabase
-      const mockUser = {
-        id: '123456',
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        name: email.split('@')[0],
-      };
-      
-      // Save to localStorage for demo purposes
-      localStorage.setItem('sphere_user', JSON.stringify(mockUser));
-      
-      setUser(mockUser);
+        password,
+      });
+
+      if (error) throw error;
       toast.success('Signed in successfully!');
-      
-      return Promise.resolve();
-    } catch (error) {
-      toast.error('Failed to sign in');
-      return Promise.reject(error);
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in');
+      throw error;
     }
   };
 
   const signUp = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    
     try {
-      // Mock registration - will be replaced with Supabase
-      const mockUser = {
-        id: '123456',
+      const { error } = await supabase.auth.signUp({
         email,
-        name,
-      };
-      
-      // For demo, we'll just save to localStorage
-      localStorage.setItem('sphere_user', JSON.stringify(mockUser));
-      
-      setUser(mockUser);
-      toast.success('Account created successfully!');
-      
-      return Promise.resolve();
-    } catch (error) {
-      toast.error('Failed to create account');
-      return Promise.reject(error);
-    } finally {
-      setIsLoading(false);
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+
+      if (error) throw error;
+      toast.success('Account created successfully! Please check your email to verify your account.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account');
+      throw error;
     }
   };
 
   const signOut = async () => {
-    setIsLoading(true);
-    
     try {
-      // Mock signout - will be replaced with Supabase
-      localStorage.removeItem('sphere_user');
-      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       toast.success('Signed out successfully');
-      
-      return Promise.resolve();
-    } catch (error) {
-      toast.error('Failed to sign out');
-      return Promise.reject(error);
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign out');
+      throw error;
     }
   };
 
   const value = {
     user,
+    session,
     isLoading,
     signIn,
     signUp,
@@ -125,10 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };
