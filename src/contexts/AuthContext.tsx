@@ -26,6 +26,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success('Signed in successfully!');
+        }
       }
     );
 
@@ -47,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-      toast.success('Signed in successfully!');
+      // Toast is now handled in onAuthStateChange listener
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
@@ -56,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (name: string, email: string, password: string) => {
     try {
+      // Changed to not require email verification
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,11 +68,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             name,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
 
       if (error) throw error;
-      toast.success('Account created successfully! Please check your email to verify your account.');
+      toast.success('Account created successfully! You can now sign in.');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
       throw error;

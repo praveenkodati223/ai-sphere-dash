@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -31,10 +33,10 @@ const Signup = () => {
     
     try {
       await signUp(name, email, password);
-      navigate('/');
+      navigate('/login'); // Redirect to login after signup
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create account. Please try again.");
+      // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -79,14 +81,23 @@ const Signup = () => {
           
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">Password</label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-black/20 border-white/10"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-black/20 border-white/10 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
           

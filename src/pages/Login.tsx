@@ -27,10 +27,10 @@ const Login = () => {
     
     try {
       await signIn(email, password);
-      navigate('/');
+      navigate('/app'); // Direct to app dashboard on successful login
     } catch (error) {
       console.error(error);
-      toast.error("Failed to login. Please check your credentials.");
+      // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
