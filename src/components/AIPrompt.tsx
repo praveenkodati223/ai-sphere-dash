@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, BrainCircuit } from "lucide-react";
+import { ArrowRight, BrainCircuit, BarChart, LineChart, PieChart, ListFilter } from "lucide-react";
 import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
 
@@ -15,9 +15,20 @@ interface QueryParserResponse {
   title: string;
 }
 
+// Define the data insights response structure
+interface DataInsightsResponse {
+  summary: string;
+  trends: string[];
+  outliers: string[];
+  topPerformers: string[];
+  keyInsights: string[];
+}
+
 const AIPrompt = () => {
   const [promptInput, setPromptInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [dataInsights, setDataInsights] = useState<DataInsightsResponse | null>(null);
   const { 
     activeDataset, 
     setSelectedChart, 
@@ -30,7 +41,8 @@ const AIPrompt = () => {
     "Show me sales trends over the last 3 months",
     "Compare regional performance in a bar chart",
     "Identify top-performing products",
-    "Show total sales by category"
+    "Show total sales by category",
+    "Analyze this dataset for key insights"
   ];
   
   // Parse natural language query to determine visualization parameters
@@ -111,6 +123,156 @@ const AIPrompt = () => {
     return response;
   };
 
+  // Generate AI insights based on the current dataset
+  const generateDataInsights = () => {
+    if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) {
+      toast.error("No dataset available for analysis");
+      return null;
+    }
+
+    setIsAnalyzing(true);
+    
+    // Simulate AI processing time
+    setTimeout(() => {
+      try {
+        const data = activeDataset.data;
+        
+        // Calculate basic statistics
+        const totalsByCategory = new Map();
+        const valuesByCategory = new Map();
+        const quarters = ['q1', 'q2', 'q3', 'q4'];
+        
+        // Collect data by category
+        data.forEach(item => {
+          const category = item.category;
+          const total = item.value || (item.q1 + item.q2 + item.q3 + item.q4);
+          
+          if (!totalsByCategory.has(category)) {
+            totalsByCategory.set(category, total);
+            valuesByCategory.set(category, []);
+          } else {
+            totalsByCategory.set(category, totalsByCategory.get(category) + total);
+          }
+          
+          valuesByCategory.get(category).push(total);
+        });
+        
+        // Find trends across quarters
+        const quarterTotals = quarters.map(q => 
+          data.reduce((sum, item) => sum + (item[q as keyof typeof item] as number || 0), 0)
+        );
+        
+        const trends = [];
+        if (quarterTotals[3] > quarterTotals[0]) {
+          const growth = Math.round(((quarterTotals[3] - quarterTotals[0]) / quarterTotals[0]) * 100);
+          trends.push(`Overall growth of ${growth}% from Q1 to Q4`);
+        } else {
+          const decline = Math.round(((quarterTotals[0] - quarterTotals[3]) / quarterTotals[0]) * 100);
+          trends.push(`Overall decline of ${decline}% from Q1 to Q4`);
+        }
+        
+        // Find quarter with highest growth
+        let maxGrowthQuarter = 0;
+        let maxGrowth = 0;
+        for (let i = 1; i < quarterTotals.length; i++) {
+          const growth = quarterTotals[i] - quarterTotals[i-1];
+          if (growth > maxGrowth) {
+            maxGrowth = growth;
+            maxGrowthQuarter = i;
+          }
+        }
+        
+        if (maxGrowth > 0) {
+          trends.push(`Strongest growth observed in Q${maxGrowthQuarter+1}`);
+        }
+        
+        // Find top performers
+        const sortedCategories = Array.from(totalsByCategory.entries())
+          .sort((a, b) => b[1] - a[1]);
+        
+        const topPerformers = sortedCategories.slice(0, 3).map(([category, total]) => 
+          `${category}: ${total.toLocaleString()} (${Math.round((total / quarterTotals.reduce((a, b) => a + b, 0)) * 100)}% of total)`
+        );
+        
+        // Find outliers
+        const allValues = Array.from(valuesByCategory.values()).flat();
+        const mean = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+        const stdDev = Math.sqrt(
+          allValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / allValues.length
+        );
+        
+        const outliers = [];
+        valuesByCategory.forEach((values, category) => {
+          values.forEach(value => {
+            if (Math.abs(value - mean) > stdDev * 2) {
+              outliers.push(`${category} has an outlier value of ${value.toLocaleString()}`);
+            }
+          });
+        });
+        
+        // Generate key insights
+        const keyInsights = [];
+        
+        // Check for category concentration
+        if (sortedCategories[0][1] > quarterTotals.reduce((a, b) => a + b, 0) * 0.4) {
+          keyInsights.push(`High concentration: ${sortedCategories[0][0]} represents over 40% of total value`);
+        }
+        
+        // Check quarter-over-quarter growth
+        const qoqGrowth = [];
+        for (let i = 1; i < quarterTotals.length; i++) {
+          const growth = Math.round(((quarterTotals[i] - quarterTotals[i-1]) / quarterTotals[i-1]) * 100);
+          qoqGrowth.push(growth);
+        }
+        
+        if (qoqGrowth.every(g => g > 0)) {
+          keyInsights.push("Consistent growth across all quarters");
+        } else if (qoqGrowth.every(g => g < 0)) {
+          keyInsights.push("Consistent decline across all quarters - requires attention");
+        }
+        
+        // Check for regional patterns if region data exists
+        const regions = Array.from(new Set(data.filter(item => item.region).map(item => item.region)));
+        if (regions.length > 0) {
+          const regionTotals = new Map();
+          
+          data.forEach(item => {
+            if (!item.region) return;
+            
+            const total = item.value || (item.q1 + item.q2 + item.q3 + item.q4);
+            if (!regionTotals.has(item.region)) {
+              regionTotals.set(item.region, total);
+            } else {
+              regionTotals.set(item.region, regionTotals.get(item.region) + total);
+            }
+          });
+          
+          const topRegion = Array.from(regionTotals.entries())
+            .sort((a, b) => b[1] - a[1])[0];
+            
+          keyInsights.push(`${topRegion[0]} is the top-performing region`);
+        }
+
+        const insights: DataInsightsResponse = {
+          summary: `Analysis of ${activeDataset.name} - ${data.length} data points across ${totalsByCategory.size} categories`,
+          trends: trends.slice(0, 3),
+          outliers: outliers.slice(0, 3),
+          topPerformers: topPerformers,
+          keyInsights: keyInsights
+        };
+        
+        setDataInsights(insights);
+        setIsAnalyzing(false);
+        toast.success("Analysis complete!");
+
+      } catch (error) {
+        console.error("Error analyzing data:", error);
+        toast.error("Error generating insights. Please try again.");
+        setIsAnalyzing(false);
+      }
+    }, 1500);
+  };
+
   const handlePromptSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -125,8 +287,26 @@ const AIPrompt = () => {
     }
     
     setIsProcessing(true);
+    setDataInsights(null);
     
-    // Process the query and get visualization parameters
+    // Check if the prompt is asking for data insights/analysis
+    if (
+      promptInput.toLowerCase().includes('analyze') || 
+      promptInput.toLowerCase().includes('insights') ||
+      promptInput.toLowerCase().includes('summarize') ||
+      promptInput.toLowerCase().includes('overview')
+    ) {
+      // Handle the data insights request
+      setTimeout(() => {
+        generateDataInsights();
+        setCurrentView('insights');
+        setIsProcessing(false);
+        setPromptInput('');
+      }, 1000);
+      return;
+    }
+    
+    // Process the query as a visualization request
     const queryAnalysis = parseQuery(promptInput);
     
     // Using setTimeout to simulate processing time
@@ -180,6 +360,16 @@ const AIPrompt = () => {
     setPromptInput(suggestion);
   };
   
+  const handleRunInsightsAnalysis = () => {
+    setPromptInput("Analyze this dataset for key insights");
+    
+    setTimeout(() => {
+      handlePromptSubmit({
+        preventDefault: () => {}
+      } as React.FormEvent);
+    }, 100);
+  };
+  
   if (!activeDataset) {
     return null; // Don't render AI prompt if no dataset
   }
@@ -198,14 +388,14 @@ const AIPrompt = () => {
             value={promptInput}
             onChange={(e) => setPromptInput(e.target.value)}
             className="flex-1"
-            disabled={isProcessing}
+            disabled={isProcessing || isAnalyzing}
           />
           <Button 
             type="submit" 
-            disabled={isProcessing || !promptInput.trim()}
+            disabled={isProcessing || isAnalyzing || !promptInput.trim()}
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
           >
-            {isProcessing ? "Processing..." : <ArrowRight className="h-5 w-5" />}
+            {isProcessing || isAnalyzing ? "Processing..." : <ArrowRight className="h-5 w-5" />}
           </Button>
         </div>
       </form>
@@ -226,6 +416,78 @@ const AIPrompt = () => {
           ))}
         </div>
       </div>
+      
+      {dataInsights && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-sphere-cyan">Dataset Analysis</h4>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={handleRunInsightsAnalysis}
+            >
+              Refresh Analysis
+            </Button>
+          </div>
+          
+          <div className="text-sm">
+            <p className="mb-2">{dataInsights.summary}</p>
+            
+            {dataInsights.trends.length > 0 && (
+              <div className="mb-2">
+                <span className="font-semibold flex items-center gap-1">
+                  <LineChart className="h-3 w-3" /> Trends:
+                </span>
+                <ul className="list-disc pl-5 mt-1">
+                  {dataInsights.trends.map((trend, i) => (
+                    <li key={i}>{trend}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {dataInsights.topPerformers.length > 0 && (
+              <div className="mb-2">
+                <span className="font-semibold flex items-center gap-1">
+                  <BarChart className="h-3 w-3" /> Top Performers:
+                </span>
+                <ul className="list-disc pl-5 mt-1">
+                  {dataInsights.topPerformers.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {dataInsights.outliers.length > 0 && (
+              <div className="mb-2">
+                <span className="font-semibold flex items-center gap-1">
+                  <ListFilter className="h-3 w-3" /> Outliers:
+                </span>
+                <ul className="list-disc pl-5 mt-1">
+                  {dataInsights.outliers.map((outlier, i) => (
+                    <li key={i}>{outlier}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {dataInsights.keyInsights.length > 0 && (
+              <div>
+                <span className="font-semibold flex items-center gap-1">
+                  <PieChart className="h-3 w-3" /> Key Insights:
+                </span>
+                <ul className="list-disc pl-5 mt-1">
+                  {dataInsights.keyInsights.map((insight, i) => (
+                    <li key={i}>{insight}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
