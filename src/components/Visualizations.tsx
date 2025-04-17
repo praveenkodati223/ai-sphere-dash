@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -87,7 +88,7 @@ const Visualizations = () => {
         { id: 'scatter', name: 'Scatter Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
           description: 'Shows correlation between two variables. Good for identifying patterns and outliers.' },
         { id: 'bubble', name: 'Bubble Chart', icon: <ChartBarIcon className="h-4 w-4 mr-2" />,
-          description: 'Like scatter charts but with a third dimension shown by bubble size. Shows 3 variables at once.' },
+          description: 'Like scatter charts but with a third dimension shown by bubble size. Shows 3 variables at once.' }
       ]
     },
     {
@@ -479,18 +480,6 @@ const Visualizations = () => {
                     </CardContent>
                   </Card>
                 )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="text-lg mb-2">No data analysis available</div>
-                  <Button 
-                    onClick={() => analyzeData()} 
-                    className="bg-sphere-cyan hover:bg-sphere-cyan/80"
-                  >
-                    Analyze Data
-                  </Button>
-                </div>
               </div>
             )}
           </div>
