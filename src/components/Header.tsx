@@ -1,12 +1,14 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DataImport from './DataImport';
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/';
 
   return (
     <header className="bg-sphere-dark border-b border-white/10">
@@ -46,6 +48,13 @@ const Header = () => {
                   Sign Out
                 </Button>
               </>
+            ) : isLandingPage ? (
+              <Button
+                className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
+                onClick={() => navigate('/login')}
+              >
+                Start Using Sphere AI
+              </Button>
             ) : (
               <>
                 <Button
