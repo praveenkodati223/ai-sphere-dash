@@ -1,12 +1,8 @@
+
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import DataImport from './DataImport';
+import { Link, useLocation } from "react-router-dom";
 
 const Header = () => {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
 
@@ -31,47 +27,12 @@ const Header = () => {
           
           {/* Right side */}
           <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  className="text-slate-400 hover:text-white"
-                  onClick={() => navigate('/profile')}
-                >
-                  Profile
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="text-slate-400 hover:text-white"
-                  onClick={() => signOut()}
-                >
-                  Sign Out
-                </Button>
-              </>
-            ) : isLandingPage ? (
-              <Button
-                className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
-                onClick={() => navigate('/login')}
-              >
-                Start Using Sphere AI
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  className="text-slate-400 hover:text-white"
-                  onClick={() => navigate('/login')}
-                >
-                  Log In
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
-                  onClick={() => navigate('/signup')}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
+            <Link 
+              to="/app" 
+              className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 px-4 py-2 rounded-md text-white"
+            >
+              Open Dashboard
+            </Link>
           </div>
         </div>
       </div>
