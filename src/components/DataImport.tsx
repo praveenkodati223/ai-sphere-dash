@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { AlertCircle, FileIcon, InfoIcon, Upload, Database, Book } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import CSVUploader from './CSVUploader';
 
 const DataImport = () => {
   const [fileName, setFileName] = useState<string>('');
@@ -143,70 +143,32 @@ const DataImport = () => {
         </AlertDescription>
       </Alert>
       
-      <Tabs defaultValue="file" className="w-full">
+      <Tabs defaultValue="csv" className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="file">File Upload</TabsTrigger>
+          <TabsTrigger value="csv">CSV Upload</TabsTrigger>
           <TabsTrigger value="url">URL / API</TabsTrigger>
           <TabsTrigger value="sample">Sample Data</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="file" className="space-y-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Input 
-                type="file" 
-                accept=".csv,.xlsx,.json,.xls,.txt,.xml,.parquet" 
-                className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                onChange={handleFileChange}
-              />
-              <div className="w-full px-4 py-2 border border-dashed border-sphere-cyan/50 rounded-md text-muted-foreground flex items-center gap-2">
-                <FileIcon className="h-4 w-4" />
-                {fileName || "Choose file to import"}
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleUpload} 
-              disabled={!fileName || isUploading}
-              className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center"
-            >
-              {isUploading ? "Uploading..." : (
-                <>
-                  <Upload className="h-4 w-4" />
-                  Import
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {fileName && (
-            <div className="flex gap-2 items-center">
-              <Input
-                type="text"
-                placeholder="Dataset name (optional)"
-                value={datasetName}
-                onChange={(e) => setDatasetName(e.target.value)}
-                className="flex-1"
-              />
-            </div>
-          )}
+        <TabsContent value="csv" className="space-y-4">
+          <CSVUploader />
           
           <p className="text-xs text-muted-foreground">
-            Supported formats: CSV, Excel (.xlsx, .xls), JSON, XML, TXT, Parquet. Max size: 100MB
+            Upload CSV files with headers in the first row. Max size: 100MB
           </p>
           
           <div className="grid grid-cols-3 gap-2 text-xs mt-2">
             <div className="p-2 rounded bg-slate-800/50 border border-white/5">
-              <div className="font-semibold mb-1">CSV</div>
-              <div className="text-slate-400">Comma-separated values</div>
+              <div className="font-semibold mb-1">Supported Format</div>
+              <div className="text-slate-400">Comma-separated values (CSV)</div>
             </div>
             <div className="p-2 rounded bg-slate-800/50 border border-white/5">
-              <div className="font-semibold mb-1">Excel</div>
-              <div className="text-slate-400">Spreadsheet files</div>
+              <div className="font-semibold mb-1">Headers</div>
+              <div className="text-slate-400">First row must contain column names</div>
             </div>
             <div className="p-2 rounded bg-slate-800/50 border border-white/5">
-              <div className="font-semibold mb-1">JSON</div>
-              <div className="text-slate-400">Structured data</div>
+              <div className="font-semibold mb-1">Ask Questions</div>
+              <div className="text-slate-400">Use natural language to explore data</div>
             </div>
           </div>
         </TabsContent>

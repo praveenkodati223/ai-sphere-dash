@@ -1,68 +1,47 @@
 
 import React from 'react';
+import { useVisualization } from '@/contexts/VisualizationContext';
+import DataImport from './DataImport';
 import Visualizations from './Visualizations';
 import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
-import DataImport from './DataImport';
-import { useVisualization } from '@/contexts/VisualizationContext';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from 'lucide-react';
+import QueryInput from './QueryInput';
 
 const Dashboard = () => {
   const { activeDataset } = useVisualization();
   
-  // Removed the automatic analysis useEffect
-  
   return (
-    <section id="dashboard" className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">
-            Interactive <span className="text-gradient">Dashboard</span>
-          </h2>
-          <p className="text-lg text-slate-300 max-w-3xl mx-auto">
-            Explore your data through customizable visualizations. Use the AI assistant for instant insights, or manually configure your view with filters and chart options.
-          </p>
+    <div className="min-h-screen bg-sphere-dark text-white">
+      <div className="container mx-auto py-8 px-4">
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          <div className="col-span-12">
+            <DataImport />
+          </div>
         </div>
         
-        {!activeDataset ? (
-          <div className="glass p-6 rounded-lg mb-6">
-            <Alert className="bg-blue-950/40 border-blue-500/30">
-              <InfoIcon className="h-4 w-4 text-blue-500" />
-              <AlertTitle>Getting Started</AlertTitle>
-              <AlertDescription>
-                Import a dataset below to start exploring your data with interactive visualizations.
-              </AlertDescription>
-            </Alert>
-            <div className="mt-6">
-              <DataImport />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <div className="space-y-6">
-                {activeDataset && <FilterPanel />}
+        {activeDataset && (
+          <>
+            <div className="grid grid-cols-12 gap-4 mb-4">
+              <div className="col-span-12 md:col-span-7">
+                <QueryInput />
+              </div>
+              <div className="col-span-12 md:col-span-5">
                 <AIPrompt />
               </div>
             </div>
             
-            <div className="lg:col-span-3">
-              <div className="space-y-6">
+            <div className="grid grid-cols-12 gap-4 mb-4">
+              <div className="col-span-12 md:col-span-3">
+                <FilterPanel />
+              </div>
+              <div className="col-span-12 md:col-span-9">
                 <Visualizations />
               </div>
             </div>
-          </div>
-        )}
-        
-        {activeDataset && (
-          <div className="mt-8 text-center">
-            <p className="text-green-400">Currently visualizing: {activeDataset.name}</p>
-            <p className="text-xs text-slate-400 mt-1">{activeDataset.description}</p>
-          </div>
+          </>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 
