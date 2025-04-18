@@ -60,20 +60,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (name: string, email: string, password: string) => {
     try {
-      // Changed to not require email verification
-      const { error } = await supabase.auth.signUp({
+      // Sign up WITHOUT email verification (autoconfirm)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name,
           },
-          emailRedirectTo: window.location.origin,
+          // No email verification
         },
       });
 
       if (error) throw error;
-      toast.success('Account created successfully! You can now sign in.');
+      
+      // Automatically sign in after signup
+      if (data.user) {
+        await signIn(email, password);
+      }
+      
+      toast.success('Account created successfully!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
       throw error;

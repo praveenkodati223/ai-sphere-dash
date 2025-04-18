@@ -33,7 +33,7 @@ const Signup = () => {
     
     try {
       await signUp(name, email, password);
-      navigate('/login'); // Redirect to login after signup
+      navigate('/app'); // Automatically redirect to app dashboard after signup
     } catch (error) {
       console.error(error);
       // Error is already handled in the AuthContext
