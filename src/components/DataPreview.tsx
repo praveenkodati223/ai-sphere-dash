@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,18 +15,19 @@ import {
   SlidersHorizontal, 
   Check, 
   X, 
-  Download, 
-  Upload 
+  Download,
+  RefreshCw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 const DataPreview = () => {
-  const { activeDataset, analyzeData } = useVisualization();
+  const { activeDataset, analyzeData, exportData } = useVisualization();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [showOnlySelected, setShowOnlySelected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   if (!activeDataset) return null;
   
@@ -48,23 +48,44 @@ const DataPreview = () => {
   };
   
   const handleApply = () => {
-    // Here we could filter the dataset to only include selected rows
-    toast.success(`Applied selection of ${selectedRows.length} rows`);
-    analyzeData();
+    toast.promise(
+      async () => {
+        await analyzeData();
+        return "Selection applied successfully";
+      },
+      {
+        loading: 'Applying selection...',
+        success: `Applied selection of ${selectedRows.length} rows`,
+        error: 'Failed to apply selection'
+      }
+    );
+  };
+  
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      analyzeData();
+      setIsRefreshing(false);
+      toast.success("Data refreshed successfully");
+    }, 1000);
   };
   
   const handleExport = () => {
-    toast.success("Data export started");
-    
-    setTimeout(() => {
-      const fileName = `${activeDataset.name.replace(/\s+/g, '_').toLowerCase()}_export_${new Date().toISOString().slice(0,10)}.csv`;
-      toast.success(`Data exported successfully as ${fileName}`);
-    }, 1000);
+    toast.promise(
+      async () => {
+        await exportData();
+        return "Data exported successfully";
+      },
+      {
+        loading: 'Exporting data...',
+        success: 'Data exported successfully',
+        error: 'Failed to export data'
+      }
+    );
   };
   
   const filteredData = activeDataset.data
     .filter((item, index) => {
-      // Apply search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return Object.values(item).some(val => 
@@ -72,7 +93,6 @@ const DataPreview = () => {
         );
       }
       
-      // Apply selected rows filter if enabled
       if (showOnlySelected) {
         return selectedRows.includes(index);
       }
@@ -121,6 +141,17 @@ const DataPreview = () => {
             className="border-sphere-cyan/30"
           >
             {selectedRows.length === filteredData.length ? "Deselect All" : "Select All"}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="border-sphere-cyan/30"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
           
           <Button

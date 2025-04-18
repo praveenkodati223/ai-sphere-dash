@@ -9,17 +9,65 @@ import QueryInput from './QueryInput';
 import DataPreview from './DataPreview';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, ChartBar, Filter, MessageSquare } from 'lucide-react';
+import { Database, ChartBar, Filter, MessageSquare, Download, Share2 } from 'lucide-react';
+import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { activeDataset } = useVisualization();
+  const { activeDataset, exportData } = useVisualization();
   const [activeTab, setActiveTab] = useState<string>('visualize');
+  const navigate = useNavigate();
+  
+  const handleExport = () => {
+    if (!activeDataset) {
+      toast.error("Please import data first");
+      return;
+    }
+    
+    exportData();
+    toast.success("Data exported successfully");
+  };
+  
+  const handleShare = () => {
+    if (!activeDataset) {
+      toast.error("Please import data first");
+      return;
+    }
+    
+    // Generate shareable link
+    const shareableLink = window.location.origin + '/shared/' + btoa(JSON.stringify({ datasetId: activeDataset.id }));
+    navigator.clipboard.writeText(shareableLink);
+    toast.success("Shareable link copied to clipboard");
+  };
   
   return (
     <div className="min-h-screen bg-sphere-dark text-white">
       <div className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-12 gap-4 mb-4">
           <div className="col-span-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Data Visualization</h2>
+              {activeDataset && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleExport}
+                    className="border-sphere-cyan/30 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="border-sphere-cyan/30 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              )}
+            </div>
             <DataImport />
           </div>
         </div>
@@ -89,12 +137,19 @@ const Dashboard = () => {
                       <p className="mb-4 text-slate-300">
                         Ask the AI to analyze your data and provide insights, or use the query input to generate visualizations.
                       </p>
-                      <div className="flex justify-center mb-4">
+                      <div className="flex flex-col gap-4 items-center mb-4">
                         <Button 
                           onClick={() => setActiveTab('visualize')}
                           className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
                         >
                           Generate AI-Powered Visualizations
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => navigate('/analytics')}
+                          className="border-sphere-cyan/30 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+                        >
+                          View Detailed Analytics
                         </Button>
                       </div>
                     </div>

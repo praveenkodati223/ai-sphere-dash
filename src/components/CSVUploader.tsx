@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,33 @@ import { useVisualization } from '@/contexts/VisualizationContext';
 const CSVUploader = () => {
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [dragActive, setDragActive] = useState<boolean>(false);
   const { importCustomData, analyzeData, setAnalysisType } = useVisualization();
+  
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type === "text/csv") {
+        handleCSVUpload(file, file.name.split('.').slice(0, -1).join('.'));
+      } else {
+        toast.error("Please upload only CSV files");
+      }
+    }
+  };
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -100,7 +125,13 @@ const CSVUploader = () => {
   };
   
   return (
-    <div className="flex gap-4">
+    <div 
+      className={`flex gap-4 ${dragActive ? 'opacity-50' : ''}`}
+      onDragEnter={handleDrag}
+      onDragLeave={handleDrag}
+      onDragOver={handleDrag}
+      onDrop={handleDrop}
+    >
       <div className="relative flex-1">
         <Input 
           type="file" 
@@ -109,19 +140,19 @@ const CSVUploader = () => {
           onChange={handleFileChange}
           disabled={isUploading}
         />
-        <div className="w-full px-4 py-2 border border-dashed border-sphere-cyan/50 rounded-md text-muted-foreground flex items-center gap-2">
+        <div className={`w-full px-4 py-2 border border-dashed ${dragActive ? 'border-sphere-cyan' : 'border-sphere-cyan/50'} rounded-md text-muted-foreground flex items-center gap-2`}>
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <FileSpreadsheetIcon className="h-4 w-4" />
           )}
-          {isUploading ? "Processing..." : fileName || "Choose CSV file to import"}
+          {isUploading ? "Processing..." : dragActive ? "Drop CSV file here" : fileName || "Choose CSV file to import"}
         </div>
       </div>
       
       <Button 
         disabled={!fileName || isUploading}
-        className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center"
+        className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center whitespace-nowrap"
       >
         {isUploading ? (
           <>
