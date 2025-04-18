@@ -102,6 +102,20 @@ interface VisualizationContextType {
   importCustomData: (name: string, description: string, data?: any[]) => void;
   customChartConfig: ChartConfig | null;
   setCustomChartConfig: (config: ChartConfig | null) => void;
+  dateRange: [Date | null, Date | null];
+  setDateRange: (range: [Date | null, Date | null]) => void;
+  availableCategories: string[];
+  availableRegions: string[];
+  showOutliers: boolean;
+  setShowOutliers: (show: boolean) => void;
+  minValue: number;
+  setMinValue: (value: number) => void;
+  maxValue: number;
+  setMaxValue: (value: number) => void;
+  category: string | null;
+  setCategory: (category: string | null) => void;
+  region: string | null;
+  setRegion: (region: string | null) => void;
 }
 
 export const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -114,9 +128,24 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [analysisType, setAnalysisType] = useState<AnalysisType>('trends');
   const [analyzedData, setAnalyzedData] = useState<AnalyzedDataType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  
-  // Add this new state for custom chart configuration
   const [customChartConfig, setCustomChartConfig] = useState<ChartConfig | null>(null);
+  
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [showOutliers, setShowOutliers] = useState<boolean>(true);
+  const [minValue, setMinValue] = useState<number>(0);
+  const [maxValue, setMaxValue] = useState<number>(1000);
+  const [category, setCategory] = useState<string | null>(null);
+  const [region, setRegion] = useState<string | null>(null);
+  
+  const availableCategories = React.useMemo(() => {
+    if (!activeDataset) return [];
+    return Array.from(new Set(activeDataset.data.map(item => item.category))).filter(Boolean) as string[];
+  }, [activeDataset]);
+  
+  const availableRegions = React.useMemo(() => {
+    if (!activeDataset) return [];
+    return Array.from(new Set(activeDataset.data.map(item => item.region))).filter(Boolean) as string[];
+  }, [activeDataset]);
   
   const analyzeData = useCallback(() => {
     if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) {
@@ -126,18 +155,15 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     
     setIsAnalyzing(true);
     
-    // Simulate analysis
     setTimeout(() => {
       try {
         const data = activeDataset.data;
         
-        // Calculate basic metrics
         const total = data.reduce((sum, item) => sum + (item.value || item.q1 + item.q2 + item.q3 + item.q4), 0);
         const average = total / data.length;
         const max = Math.max(...data.map(item => item.value || item.q1 + item.q2 + item.q3 + item.q4));
         const min = Math.min(...data.map(item => item.value || item.q1 + item.q2 + item.q3 + item.q4));
         
-        // Generate insights
         const insights = [
           `Total value: ${total.toLocaleString()}`,
           `Average value: ${average.toLocaleString()}`,
@@ -145,7 +171,6 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
           `Minimum value: ${min.toLocaleString()}`
         ];
         
-        // Category breakdown
         const categoryTotals: { [key: string]: number } = {};
         data.forEach(item => {
           const category = item.category || 'Unknown';
@@ -158,27 +183,23 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
           percentage: Math.round((value / total) * 100)
         }));
         
-        // Trend analysis (example)
         const trendData = {
           growthRate: 5,
           seasonality: 'Winter',
           forecast: 'Positive'
         };
         
-        // Prediction data (example)
         const predictionData = {
           predictedGrowth: 7,
-          confidenceInterval: [1000, 1500]
+          confidenceInterval: [1000, 1500] as [number, number]
         };
         
-        // Correlation data (example)
         const correlationData = {
           strongestCorrelation: 'Category vs Sales',
           primaryDriver: 'Marketing Spend',
           factorsAnalyzed: 'Sales, Marketing, Seasonality'
         };
         
-        // Anomaly detection (example)
         const anomalyData = {
           anomaliesDetected: 3,
           confidence: 95,
@@ -261,7 +282,6 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const importCustomData = (name: string, description: string, data?: any[]) => {
     const id = name.toLowerCase().replace(/\s+/g, '-');
     
-    // If no data is provided, generate random data
     const generatedData = data || Array.from({ length: 10 }, (_, i) => ({
       category: `Category ${i + 1}`,
       q1: Math.floor(Math.random() * 1000),
@@ -281,7 +301,6 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setActiveDataset(newDataset);
   };
 
-  // Add customChartConfig to the context value
   const value = {
     datasets,
     activeDataset,
@@ -298,7 +317,21 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     clearDatasets,
     importCustomData,
     customChartConfig,
-    setCustomChartConfig
+    setCustomChartConfig,
+    dateRange,
+    setDateRange,
+    availableCategories,
+    availableRegions,
+    showOutliers,
+    setShowOutliers,
+    minValue,
+    setMinValue,
+    maxValue,
+    setMaxValue,
+    category,
+    setCategory,
+    region,
+    setRegion
   };
 
   return (

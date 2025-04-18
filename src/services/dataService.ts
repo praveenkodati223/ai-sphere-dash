@@ -1,6 +1,11 @@
 
+import { toast } from "sonner";
+
 // Sample data for visualizations
 export const sampleCategories = ['Electronics', 'Clothing', 'Food', 'Furniture', 'Toys', 'Books', 'Sports'];
+
+// Chart colors
+export const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F', '#FFBB28', '#FF8042'];
 
 export interface DataPoint {
   category: string;
@@ -45,6 +50,12 @@ export const generateSampleData = (): DataPoint[] => {
     };
   });
 };
+
+// Define sample data exports
+export const sampleSalesData = generateSampleData();
+export const sampleWebAnalyticsData = generatePatternedData('growing');
+export const sampleInventoryData = generatePatternedData('seasonal');
+export const sampleFinancialData = generatePatternedData('anomalies');
 
 // Generate custom data based on a seed (filename or other identifier)
 export const generateCustomData = (seed: string): DataPoint[] => {
