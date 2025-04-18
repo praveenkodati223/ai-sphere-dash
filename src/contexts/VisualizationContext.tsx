@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
@@ -102,8 +103,8 @@ interface VisualizationContextType {
   importCustomData: (name: string, description: string, data?: any[]) => void;
   customChartConfig: ChartConfig | null;
   setCustomChartConfig: (config: ChartConfig | null) => void;
-  dateRange: [Date | null, Date | null];
-  setDateRange: (range: [Date | null, Date | null]) => void;
+  dateRange: number[];
+  setDateRange: (range: number[]) => void;
   availableCategories: string[];
   availableRegions: string[];
   showOutliers: boolean;
@@ -130,7 +131,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [customChartConfig, setCustomChartConfig] = useState<ChartConfig | null>(null);
   
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [dateRange, setDateRange] = useState<number[]>([30, 90]);
   const [showOutliers, setShowOutliers] = useState<boolean>(true);
   const [minValue, setMinValue] = useState<number>(0);
   const [maxValue, setMaxValue] = useState<number>(1000);

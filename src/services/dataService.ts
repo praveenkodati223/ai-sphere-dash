@@ -30,6 +30,51 @@ export interface DataSet {
   };
 }
 
+// Function to generate data with specific patterns for demo purposes
+export const generatePatternedData = (pattern: string): DataPoint[] => {
+  switch (pattern) {
+    case 'seasonal':
+      return sampleCategories.map(category => ({
+        category,
+        q1: Math.floor(Math.random() * 500) + 100,
+        q2: Math.floor(Math.random() * 900) + 600, // Peak in Q2
+        q3: Math.floor(Math.random() * 700) + 300,
+        q4: Math.floor(Math.random() * 500) + 100,
+        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+      }));
+
+    case 'growing':
+      return sampleCategories.map(category => ({
+        category,
+        q1: Math.floor(Math.random() * 300) + 100,
+        q2: Math.floor(Math.random() * 300) + 300,
+        q3: Math.floor(Math.random() * 300) + 500,
+        q4: Math.floor(Math.random() * 300) + 700, // Growing each quarter
+        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+      }));
+      
+    case 'anomalies':
+      return sampleCategories.map((category, idx) => {
+        // Add a big spike to one random category
+        const isAnomaly = idx === Math.floor(Math.random() * sampleCategories.length);
+        return {
+          category,
+          q1: Math.floor(Math.random() * 500) + 200,
+          q2: Math.floor(Math.random() * 500) + 200,
+          q3: isAnomaly ? Math.floor(Math.random() * 2000) + 1500 : Math.floor(Math.random() * 500) + 200, // Anomaly in Q3
+          q4: Math.floor(Math.random() * 500) + 200,
+          region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
+          subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
+        };
+      });
+      
+    default:
+      return generateSampleData();
+  }
+};
+
 // Generate random sample data
 export const generateSampleData = (): DataPoint[] => {
   return sampleCategories.map(category => {
@@ -227,48 +272,3 @@ export const sampleDatasets: DataSet[] = [
     }
   }
 ];
-
-// Function to generate data with specific patterns for demo purposes
-export const generatePatternedData = (pattern: string): DataPoint[] => {
-  switch (pattern) {
-    case 'seasonal':
-      return sampleCategories.map(category => ({
-        category,
-        q1: Math.floor(Math.random() * 500) + 100,
-        q2: Math.floor(Math.random() * 900) + 600, // Peak in Q2
-        q3: Math.floor(Math.random() * 700) + 300,
-        q4: Math.floor(Math.random() * 500) + 100,
-        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
-        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
-      }));
-
-    case 'growing':
-      return sampleCategories.map(category => ({
-        category,
-        q1: Math.floor(Math.random() * 300) + 100,
-        q2: Math.floor(Math.random() * 300) + 300,
-        q3: Math.floor(Math.random() * 300) + 500,
-        q4: Math.floor(Math.random() * 300) + 700, // Growing each quarter
-        region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
-        subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
-      }));
-      
-    case 'anomalies':
-      return sampleCategories.map((category, idx) => {
-        // Add a big spike to one random category
-        const isAnomaly = idx === Math.floor(Math.random() * sampleCategories.length);
-        return {
-          category,
-          q1: Math.floor(Math.random() * 500) + 200,
-          q2: Math.floor(Math.random() * 500) + 200,
-          q3: isAnomaly ? Math.floor(Math.random() * 2000) + 1500 : Math.floor(Math.random() * 500) + 200, // Anomaly in Q3
-          q4: Math.floor(Math.random() * 500) + 200,
-          region: ['North', 'South', 'East', 'West'][Math.floor(Math.random() * 4)],
-          subCategory: ['Premium', 'Standard', 'Economy'][Math.floor(Math.random() * 3)]
-        };
-      });
-      
-    default:
-      return generateSampleData();
-  }
-};

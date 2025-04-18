@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
+import { format } from 'date-fns';
 
 const FilterPanel = () => {
   const { 
@@ -46,8 +47,8 @@ const FilterPanel = () => {
       const min = Math.floor(Math.min(...values));
       const max = Math.ceil(Math.max(...values));
       
-      setMinValue(min.toString());
-      setMaxValue(max.toString());
+      setMinValue(min);
+      setMaxValue(max);
       setCategory('all');
       setRegion('all');
       
@@ -65,8 +66,8 @@ const FilterPanel = () => {
       const max = Math.ceil(Math.max(...values));
       
       setShowOutliers(false);
-      setMinValue(min.toString());
-      setMaxValue(max.toString());
+      setMinValue(min);
+      setMaxValue(max);
       setCategory('all');
       setRegion('all');
       setDateRange([30, 90]);
@@ -76,8 +77,8 @@ const FilterPanel = () => {
   
   const handleApply = () => {
     // Validate inputs before applying
-    const minVal = parseFloat(minValue);
-    const maxVal = parseFloat(maxValue);
+    const minVal = parseFloat(minValue.toString());
+    const maxVal = parseFloat(maxValue.toString());
     
     if (isNaN(minVal) || isNaN(maxVal)) {
       toast.error("Please enter valid numeric values for min and max");
@@ -118,7 +119,7 @@ const FilterPanel = () => {
         {availableCategories && availableCategories.length > 0 && (
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category || 'all'} onValueChange={setCategory}>
               <SelectTrigger id="category" className="bg-slate-800 border-sphere-cyan/30">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -136,7 +137,7 @@ const FilterPanel = () => {
         {availableRegions && availableRegions.length > 0 && (
           <div className="space-y-2">
             <Label htmlFor="region">Region</Label>
-            <Select value={region} onValueChange={setRegion}>
+            <Select value={region || 'all'} onValueChange={setRegion}>
               <SelectTrigger id="region" className="bg-slate-800 border-sphere-cyan/30">
                 <SelectValue placeholder="Select region" />
               </SelectTrigger>
@@ -162,7 +163,7 @@ const FilterPanel = () => {
             min={1} 
             step={1} 
             value={dateRange}
-            onValueChange={setDateRange as any}
+            onValueChange={setDateRange}
             className="my-4"
           />
           <p className="text-xs text-muted-foreground">Filter data by time period</p>
@@ -175,7 +176,7 @@ const FilterPanel = () => {
             type="number" 
             placeholder="0"
             value={minValue}
-            onChange={(e) => setMinValue(e.target.value)}
+            onChange={(e) => setMinValue(Number(e.target.value))}
             className="bg-slate-800 border-sphere-cyan/30"
           />
           <p className="text-xs text-muted-foreground">Set minimum threshold for values</p>
@@ -188,7 +189,7 @@ const FilterPanel = () => {
             type="number" 
             placeholder="1000"
             value={maxValue}
-            onChange={(e) => setMaxValue(e.target.value)}
+            onChange={(e) => setMaxValue(Number(e.target.value))}
             className="bg-slate-800 border-sphere-cyan/30"
           />
           <p className="text-xs text-muted-foreground">Set maximum threshold for values</p>
