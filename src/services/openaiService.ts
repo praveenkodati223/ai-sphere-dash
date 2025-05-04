@@ -31,6 +31,7 @@ export interface ChartConfig {
   summary: string;
 }
 
+// Get the OpenAI API key from environment variables
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 // Function to generate chart configuration from user query
@@ -85,8 +86,11 @@ Return ONLY a valid JSON object with the following structure:
 }
 
 Choose appropriate chart type based on the query and data types. For time series use line charts, for categories use bar charts, for parts of a whole use pie charts, etc.
-    `;
+Make sure all "dataKey" values correspond to actual column names in the dataset.
+`;
 
+    console.log("Sending request to OpenAI API with API key:", OPENAI_API_KEY ? "API key exists" : "No API key");
+    
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -112,10 +116,13 @@ Choose appropriate chart type based on the query and data types. For time series
 
     if (!response.ok) {
       const error = await response.json();
+      console.error("OpenAI API Error:", error);
       throw new Error(`OpenAI API Error: ${error.error?.message || "Unknown error"}`);
     }
 
     const data = await response.json();
+    console.log("OpenAI API Response:", data);
+    
     const content = data.choices[0].message.content;
     
     // Extract JSON from response (handle cases where GPT might wrap it in code blocks)
@@ -124,6 +131,7 @@ Choose appropriate chart type based on the query and data types. For time series
     
     try {
       const chartConfig = JSON.parse(jsonString);
+      console.log("Generated chart config:", chartConfig);
       toast.success("Visualization generated successfully!");
       return chartConfig;
     } catch (jsonError) {

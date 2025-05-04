@@ -29,7 +29,9 @@ import {
   EyeOff, 
   Filter, 
   Check, 
-  X 
+  X,
+  Download,
+  RefreshCw
 } from "lucide-react";
 
 const FilterPanel = () => {
@@ -50,7 +52,8 @@ const FilterPanel = () => {
     setCategory,
     region,
     setRegion,
-    isAnalyzing
+    isAnalyzing,
+    exportData
   } = useVisualization();
   
   const [showDataPreview, setShowDataPreview] = useState(false);
@@ -61,14 +64,26 @@ const FilterPanel = () => {
   useEffect(() => {
     if (activeDataset) {
       // Calculate min and max values from dataset
-      const values = activeDataset.data.map(item => item.value || 
-        (item.q1 + item.q2 + item.q3 + item.q4));
+      let minFound = Infinity;
+      let maxFound = -Infinity;
       
-      const min = Math.floor(Math.min(...values));
-      const max = Math.ceil(Math.max(...values));
+      activeDataset.data.forEach(item => {
+        // Try to find numeric values in any column
+        Object.values(item).forEach(value => {
+          const numValue = parseFloat(value as string);
+          if (!isNaN(numValue)) {
+            minFound = Math.min(minFound, numValue);
+            maxFound = Math.max(maxFound, numValue);
+          }
+        });
+      });
       
-      setMinValue(min);
-      setMaxValue(max);
+      // Default to 0-1000 if no numeric values found
+      if (minFound === Infinity) minFound = 0;
+      if (maxFound === -Infinity) maxFound = 1000;
+      
+      setMinValue(Math.floor(minFound));
+      setMaxValue(Math.ceil(maxFound));
       setCategory('all');
       setRegion('all');
       
@@ -82,15 +97,25 @@ const FilterPanel = () => {
   
   const handleReset = () => {
     if (activeDataset) {
-      const values = activeDataset.data.map(item => item.value || 
-        (item.q1 + item.q2 + item.q3 + item.q4));
+      let minFound = Infinity;
+      let maxFound = -Infinity;
       
-      const min = Math.floor(Math.min(...values));
-      const max = Math.ceil(Math.max(...values));
+      activeDataset.data.forEach(item => {
+        Object.values(item).forEach(value => {
+          const numValue = parseFloat(value as string);
+          if (!isNaN(numValue)) {
+            minFound = Math.min(minFound, numValue);
+            maxFound = Math.max(maxFound, numValue);
+          }
+        });
+      });
+      
+      if (minFound === Infinity) minFound = 0;
+      if (maxFound === -Infinity) maxFound = 1000;
       
       setShowOutliers(false);
-      setMinValue(min);
-      setMaxValue(max);
+      setMinValue(Math.floor(minFound));
+      setMaxValue(Math.ceil(maxFound));
       setCategory('all');
       setRegion('all');
       setDateRange([30, 90]);
@@ -147,9 +172,17 @@ const FilterPanel = () => {
     return `${selectedRows.length} of ${activeDataset.data.length} rows selected`;
   };
   
+  const handleExportData = () => {
+    exportData();
+    toast.success("Data exported successfully");
+  };
+  
   if (!activeDataset) {
     return null; // Don't render filter panel if no dataset
   }
+  
+  // Get all column names from the first row of data
+  const columnNames = activeDataset.data.length > 0 ? Object.keys(activeDataset.data[0]) : [];
   
   return (
     <div className="glass p-6 rounded-lg space-y-5">
@@ -174,22 +207,32 @@ const FilterPanel = () => {
           <span className="text-xs text-sphere-cyan">
             {activeDataset.name}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowDataPreview(!showDataPreview)}
-            className="text-xs flex items-center gap-1 border-sphere-cyan/30"
-          >
-            {showDataPreview ? (
-              <>
-                <EyeOff className="h-3 w-3" /> Hide Data
-              </>
-            ) : (
-              <>
-                <Eye className="h-3 w-3" /> View Data
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportData}
+              className="text-xs flex items-center gap-1 border-sphere-cyan/30"
+            >
+              <Download className="h-3 w-3" /> Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDataPreview(!showDataPreview)}
+              className="text-xs flex items-center gap-1 border-sphere-cyan/30"
+            >
+              {showDataPreview ? (
+                <>
+                  <EyeOff className="h-3 w-3" /> Hide Data
+                </>
+              ) : (
+                <>
+                  <Eye className="h-3 w-3" /> View Data
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       )}
       
@@ -206,12 +249,9 @@ const FilterPanel = () => {
                     />
                   </div>
                 </TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Q1</TableHead>
-                <TableHead>Q2</TableHead>
-                <TableHead>Q3</TableHead>
-                <TableHead>Q4</TableHead>
-                {activeDataset.data[0]?.region && <TableHead>Region</TableHead>}
+                {columnNames.map((column, idx) => (
+                  <TableHead key={idx}>{column}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -228,12 +268,13 @@ const FilterPanel = () => {
                       />
                     </div>
                   </TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{item.q1.toLocaleString()}</TableCell>
-                  <TableCell>{item.q2.toLocaleString()}</TableCell>
-                  <TableCell>{item.q3.toLocaleString()}</TableCell>
-                  <TableCell>{item.q4.toLocaleString()}</TableCell>
-                  {item.region && <TableCell>{item.region}</TableCell>}
+                  {columnNames.map((column, colIdx) => (
+                    <TableCell key={colIdx}>
+                      {typeof item[column] === 'number' 
+                        ? (item[column] as number).toLocaleString() 
+                        : String(item[column] || '')}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>

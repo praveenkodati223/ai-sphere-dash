@@ -11,7 +11,7 @@ const CSVUploader = () => {
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [dragActive, setDragActive] = useState<boolean>(false);
-  const { importCustomData, analyzeData, setAnalysisType } = useVisualization();
+  const { importCustomData, analyzeData, setAnalysisType, setCurrentView } = useVisualization();
   
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -73,8 +73,9 @@ const CSVUploader = () => {
       // Import the raw data directly without transformation
       importCustomData(datasetName, `Imported from ${file.name}`, csvData.data);
       
-      // Set the analysis type
+      // Set the analysis type and switch to data view first
       setAnalysisType('trends');
+      setCurrentView('data');
       
       // Force analysis to run
       setTimeout(() => {
@@ -120,6 +121,9 @@ const CSVUploader = () => {
       <Button 
         disabled={!fileName || isUploading}
         className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center whitespace-nowrap"
+        onClick={() => fileName && document.querySelector<HTMLInputElement>('input[type="file"]')?.files?.[0] && 
+          handleCSVUpload(document.querySelector<HTMLInputElement>('input[type="file"]')!.files![0], 
+          fileName.split('.').slice(0, -1).join('.'))}
       >
         {isUploading ? (
           <>

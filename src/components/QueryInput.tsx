@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,8 @@ import {
   BarChart, 
   PieChart, 
   Wand2,
-  AlertTriangle
+  AlertTriangle,
+  Check
 } from "lucide-react";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { generateChartFromQuery } from '@/services/openaiService';
@@ -23,6 +25,7 @@ const QueryInput = () => {
   const [recentQueries, setRecentQueries] = useState<string[]>([]);
   const [showAIFeatures, setShowAIFeatures] = useState<boolean>(false);
   const [apiKeyConfigured, setApiKeyConfigured] = useState<boolean>(false);
+  const [showSetupSuccess, setShowSetupSuccess] = useState<boolean>(false);
   
   const { 
     activeDataset, 
@@ -35,7 +38,14 @@ const QueryInput = () => {
   // Check if OpenAI API key is configured
   useEffect(() => {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    setApiKeyConfigured(!!apiKey);
+    const isConfigured = !!apiKey && apiKey.length > 0;
+    setApiKeyConfigured(isConfigured);
+    
+    // Show success message if API key is newly configured
+    if (isConfigured && !showSetupSuccess) {
+      setShowSetupSuccess(true);
+      toast.success("OpenAI API key configured successfully!");
+    }
   }, []);
 
   // Example queries for users to try
@@ -172,10 +182,28 @@ const QueryInput = () => {
   const availableCategories = () => {
     if (!activeDataset?.data?.[0]) return 'categories';
     
-    const categories = Object.keys(activeDataset.data[0])
-      .filter(key => key !== 'q1' && key !== 'q2' && key !== 'q3' && key !== 'q4' && key !== 'category');
+    const columns = Object.keys(activeDataset.data[0]);
+    const numericColumns = columns.filter(col => {
+      // Check if first few values are numeric
+      const sampleSize = Math.min(activeDataset.data.length, 5);
+      let numericCount = 0;
       
-    if (categories.length > 0) return categories.join(' and ');
+      for (let i = 0; i < sampleSize; i++) {
+        const val = activeDataset.data[i][col];
+        if (val !== null && val !== undefined && !isNaN(Number(val))) {
+          numericCount++;
+        }
+      }
+      
+      return numericCount >= sampleSize * 0.8;
+    });
+    
+    const categoricalColumns = columns.filter(col => 
+      col !== 'id' && !numericColumns.includes(col) && 
+      col.toLowerCase() !== 'date' && !col.toLowerCase().includes('time')
+    );
+    
+    if (categoricalColumns.length > 0) return categoricalColumns.join(' and ');
     return 'categories';
   };
   
@@ -201,7 +229,29 @@ const QueryInput = () => {
         </Button>
       </div>
 
-      {!apiKeyConfigured && (
+      {showSetupSuccess && (
+        <div className="bg-green-900/20 border border-green-600/50 p-3 rounded-lg mb-4">
+          <div className="flex items-start gap-2">
+            <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-green-500">OpenAI API Key Configured</h4>
+              <p className="text-sm text-green-500/90 mb-1">
+                Your OpenAI API key has been successfully configured. You can now use all AI features.
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowSetupSuccess(false)} 
+            className="text-green-500 hover:text-green-400 hover:bg-green-900/20 mt-1"
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      {!apiKeyConfigured && !showSetupSuccess && (
         <div className="bg-yellow-900/20 border border-yellow-600/50 p-3 rounded-lg mb-4">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -274,7 +324,7 @@ const QueryInput = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1"
-            disabled={isProcessing}
+            disabled={isProcessing || !apiKeyConfigured}
           />
           <Button 
             type="submit" 
@@ -303,6 +353,7 @@ const QueryInput = () => {
                 size="sm"
                 onClick={() => handleRecentQueryClick(recentQuery)}
                 className="text-xs border-sphere-purple/30 hover:border-sphere-purple hover:bg-sphere-purple/10"
+                disabled={!apiKeyConfigured}
               >
                 {recentQuery.length > 25 ? `${recentQuery.substring(0, 25)}...` : recentQuery}
               </Button>
@@ -321,6 +372,7 @@ const QueryInput = () => {
               size="sm"
               className="text-xs border-sphere-cyan/30 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
               onClick={() => handleExampleClick(example)}
+              disabled={!apiKeyConfigured}
             >
               {example}
             </Button>
