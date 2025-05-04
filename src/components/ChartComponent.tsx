@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { 
@@ -12,7 +13,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-slate-800 border border-slate-700 px-3 py-2 rounded text-sm">
-        <p className="text-white">{`${label}: ${payload[0].value.toLocaleString()}`}</p>
+        <p className="text-white">{`${label}: ${payload[0].value !== undefined ? payload[0].value.toLocaleString() : 'N/A'}`}</p>
       </div>
     );
   }
@@ -116,7 +117,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={(entry) => entry.name}
+                label={(entry) => entry.name || ''}
               >
                 {activeDataset.data.map((entry, index) => (
                   <Cell 
@@ -210,10 +211,38 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Line type="monotone" dataKey="q1" stroke={CHART_COLORS[0]} activeDot={{ r: 8 }} />
-            <Line type="monotone" dataKey="q2" stroke={CHART_COLORS[1]} activeDot={{ r: 8 }} />
-            <Line type="monotone" dataKey="q3" stroke={CHART_COLORS[2]} activeDot={{ r: 8 }} />
-            <Line type="monotone" dataKey="q4" stroke={CHART_COLORS[3]} activeDot={{ r: 8 }} />
+            <Line 
+              type="monotone" 
+              dataKey="q1" 
+              name="Q1"
+              stroke={CHART_COLORS[0]} 
+              activeDot={{ r: 8 }} 
+              connectNulls
+            />
+            <Line 
+              type="monotone" 
+              dataKey="q2" 
+              name="Q2"
+              stroke={CHART_COLORS[1]} 
+              activeDot={{ r: 8 }} 
+              connectNulls
+            />
+            <Line 
+              type="monotone" 
+              dataKey="q3" 
+              name="Q3"
+              stroke={CHART_COLORS[2]} 
+              activeDot={{ r: 8 }} 
+              connectNulls
+            />
+            <Line 
+              type="monotone" 
+              dataKey="q4" 
+              name="Q4"
+              stroke={CHART_COLORS[3]} 
+              activeDot={{ r: 8 }} 
+              connectNulls
+            />
           </LineChart>
         </ResponsiveContainer>
       );
@@ -227,10 +256,10 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Bar dataKey="q1" fill={CHART_COLORS[0]} />
-            <Bar dataKey="q2" fill={CHART_COLORS[1]} />
-            <Bar dataKey="q3" fill={CHART_COLORS[2]} />
-            <Bar dataKey="q4" fill={CHART_COLORS[3]} />
+            <Bar dataKey="q1" name="Q1" fill={CHART_COLORS[0]} />
+            <Bar dataKey="q2" name="Q2" fill={CHART_COLORS[1]} />
+            <Bar dataKey="q3" name="Q3" fill={CHART_COLORS[2]} />
+            <Bar dataKey="q4" name="Q4" fill={CHART_COLORS[3]} />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -246,7 +275,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
               cx="50%"
               cy="50%"
               outerRadius={100}
-              label={(entry) => entry.name}
+              label={(entry) => entry.name || ''}
             >
               {activeDataset.data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -281,10 +310,42 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Area type="monotone" dataKey="q1" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.3} />
-            <Area type="monotone" dataKey="q2" stroke={CHART_COLORS[1]} fill={CHART_COLORS[1]} fillOpacity={0.3} />
-            <Area type="monotone" dataKey="q3" stroke={CHART_COLORS[2]} fill={CHART_COLORS[2]} fillOpacity={0.3} />
-            <Area type="monotone" dataKey="q4" stroke={CHART_COLORS[3]} fill={CHART_COLORS[3]} fillOpacity={0.3} />
+            <Area 
+              type="monotone" 
+              dataKey="q1" 
+              name="Q1"
+              stroke={CHART_COLORS[0]} 
+              fill={CHART_COLORS[0]} 
+              fillOpacity={0.3} 
+              connectNulls
+            />
+            <Area 
+              type="monotone" 
+              dataKey="q2" 
+              name="Q2"
+              stroke={CHART_COLORS[1]} 
+              fill={CHART_COLORS[1]} 
+              fillOpacity={0.3} 
+              connectNulls
+            />
+            <Area 
+              type="monotone" 
+              dataKey="q3" 
+              name="Q3"
+              stroke={CHART_COLORS[2]} 
+              fill={CHART_COLORS[2]} 
+              fillOpacity={0.3} 
+              connectNulls
+            />
+            <Area 
+              type="monotone" 
+              dataKey="q4" 
+              name="Q4"
+              stroke={CHART_COLORS[3]} 
+              fill={CHART_COLORS[3]} 
+              fillOpacity={0.3} 
+              connectNulls
+            />
           </AreaChart>
         </ResponsiveContainer>
       );
@@ -296,7 +357,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             <PolarGrid stroke="#444" />
             <PolarAngleAxis dataKey="category" stroke="#fff" />
             <PolarRadiusAxis stroke="#fff" />
-            <Radar name="Mike" dataKey="q1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+            <Radar name="Q1" dataKey="q1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
             <Legend stroke="#fff" />
           </RadarChart>
         </ResponsiveContainer>
@@ -305,8 +366,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
     default:
       return <div>Unsupported chart type: {type}</div>;
   }
-
-  return <div>No chart available</div>;
 };
 
 export default ChartComponent;

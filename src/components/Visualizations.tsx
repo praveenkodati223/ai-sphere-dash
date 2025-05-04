@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -155,6 +156,23 @@ const Visualizations = () => {
     toast.success("Starting visualization process...");
   };
   
+  // Helper function to safely format numbers with toLocaleString
+  const safeFormatNumber = (value: any) => {
+    if (value === undefined || value === null) {
+      return '0';
+    }
+    return value.toLocaleString();
+  };
+  
+  // Helper function to calculate safe totals
+  const calculateRowTotal = (item: any) => {
+    const q1 = Number(item.q1 || 0);
+    const q2 = Number(item.q2 || 0);
+    const q3 = Number(item.q3 || 0);
+    const q4 = Number(item.q4 || 0);
+    return q1 + q2 + q3 + q4;
+  };
+  
   return (
     <div className="glass rounded-lg overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -271,30 +289,23 @@ const Visualizations = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left p-2">Category</th>
-                    <th className="text-left p-2">Q1</th>
-                    <th className="text-left p-2">Q2</th>
-                    <th className="text-left p-2">Q3</th>
-                    <th className="text-left p-2">Q4</th>
-                    <th className="text-left p-2">Total</th>
-                    {activeDataset.data[0]?.region && <th className="text-left p-2">Region</th>}
+                    {activeDataset && activeDataset.data.length > 0 && Object.keys(activeDataset.data[0]).map((column, index) => (
+                      <th key={index} className="text-left p-2">{column}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {activeDataset.data.map((item, idx) => {
-                    const total = item.q1 + item.q2 + item.q3 + item.q4;
-                    return (
-                      <tr key={idx} className="border-b border-white/5">
-                        <td className="p-2">{item.category}</td>
-                        <td className="p-2">{item.q1.toLocaleString()}</td>
-                        <td className="p-2">{item.q2.toLocaleString()}</td>
-                        <td className="p-2">{item.q3.toLocaleString()}</td>
-                        <td className="p-2">{item.q4.toLocaleString()}</td>
-                        <td className="p-2 font-bold">{total.toLocaleString()}</td>
-                        {item.region && <td className="p-2">{item.region}</td>}
-                      </tr>
-                    );
-                  })}
+                  {activeDataset.data.map((item, idx) => (
+                    <tr key={idx} className="border-b border-white/5">
+                      {Object.entries(item).map(([key, value], colIdx) => (
+                        <td key={`${idx}-${colIdx}`} className="p-2">
+                          {value !== undefined && value !== null ? 
+                            (typeof value === 'number' ? safeFormatNumber(value) : value) : 
+                            ''}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             )}
@@ -333,10 +344,10 @@ const Visualizations = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>Total: {analyzedData.metrics.total.toLocaleString()}</li>
-                      <li>Average: {analyzedData.metrics.average.toLocaleString()}</li>
-                      <li>Max: {analyzedData.metrics.max.toLocaleString()}</li>
-                      <li>Min: {analyzedData.metrics.min.toLocaleString()}</li>
+                      <li>Total: {safeFormatNumber(analyzedData.metrics?.total)}</li>
+                      <li>Average: {safeFormatNumber(analyzedData.metrics?.average)}</li>
+                      <li>Max: {safeFormatNumber(analyzedData.metrics?.max)}</li>
+                      <li>Min: {safeFormatNumber(analyzedData.metrics?.min)}</li>
                     </ul>
                   </CardContent>
                 </Card>
@@ -348,7 +359,7 @@ const Visualizations = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-2">
-                      {analyzedData.insights.map((insight, idx) => (
+                      {analyzedData.insights && analyzedData.insights.map((insight, idx) => (
                         <li key={idx}>{insight}</li>
                       ))}
                     </ul>
@@ -365,23 +376,25 @@ const Visualizations = () => {
                   </CardFooter>
                 </Card>
                 
-                <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Category Breakdown</CardTitle>
-                    <CardDescription>Performance by category</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {analyzedData.breakdown.slice(0, 4).map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between">
-                          <div className="w-1/3">{item.category}</div>
-                          <div className="w-1/3 text-right">{item.value.toLocaleString()}</div>
-                          <div className="w-1/3 text-right text-sphere-cyan">{item.percentage}%</div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                {analyzedData.breakdown && (
+                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Category Breakdown</CardTitle>
+                      <CardDescription>Performance by category</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {analyzedData.breakdown.slice(0, 4).map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <div className="w-1/3">{item.category}</div>
+                            <div className="w-1/3 text-right">{safeFormatNumber(item.value)}</div>
+                            <div className="w-1/3 text-right text-sphere-cyan">{item.percentage}%</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 
                 {analyzedData.trendData && (
                   <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
@@ -393,15 +406,21 @@ const Visualizations = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Growth Rate</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.growthRate}%</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.trendData.growthRate ? `${analyzedData.trendData.growthRate}%` : 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Seasonality</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.seasonality}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.trendData.seasonality || 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Forecast</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.trendData.forecast}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.trendData.forecast || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -418,12 +437,17 @@ const Visualizations = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Predicted Growth</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.predictionData.predictedGrowth}%</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.predictionData.predictedGrowth ? `${analyzedData.predictionData.predictedGrowth}%` : 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Confidence Interval</div>
                           <div className="text-xl font-bold text-sphere-cyan">
-                            {analyzedData.predictionData.confidenceInterval[0].toLocaleString()} - {analyzedData.predictionData.confidenceInterval[1].toLocaleString()}
+                            {analyzedData.predictionData.confidenceInterval ? 
+                              `${safeFormatNumber(analyzedData.predictionData.confidenceInterval[0])} - ${safeFormatNumber(analyzedData.predictionData.confidenceInterval[1])}` :
+                              'N/A'
+                            }
                           </div>
                         </div>
                       </div>
@@ -441,15 +465,21 @@ const Visualizations = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Strongest Correlation</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.strongestCorrelation}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.correlationData.strongestCorrelation || 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Primary Driver</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.primaryDriver}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.correlationData.primaryDriver || 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Factors Analyzed</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.correlationData.factorsAnalyzed}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.correlationData.factorsAnalyzed || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -466,15 +496,21 @@ const Visualizations = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Anomalies Detected</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.anomaliesDetected}</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.anomalyData.anomaliesDetected !== undefined ? analyzedData.anomalyData.anomaliesDetected : 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Detection Confidence</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.confidence}%</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.anomalyData.confidence ? `${analyzedData.anomalyData.confidence}%` : 'N/A'}
+                          </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Impact Score</div>
-                          <div className="text-xl font-bold text-sphere-cyan">{analyzedData.anomalyData.impactScore}/100</div>
+                          <div className="text-xl font-bold text-sphere-cyan">
+                            {analyzedData.anomalyData.impactScore ? `${analyzedData.anomalyData.impactScore}/100` : 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
