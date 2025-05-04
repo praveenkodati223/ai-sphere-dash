@@ -45,10 +45,14 @@ export const generateChartFromQuery = async (
   }
 
   try {
-    toast.info("Generating visualization...");
+    toast.info("Analyzing your data and generating visualization...");
     
-    const prompt = `
-Based on the following CSV data and user query, generate a chart configuration:
+    // Determine if this is a question or a chart request
+    const isQuestion = /^(what|who|why|how|when|where|can|could|does|do|is|are|will|should)\b/i.test(query.trim());
+    
+    const prompt = isQuestion
+      ? `
+Answer the following question about the data:
 
 DATA INFORMATION:
 - Row count: ${dataInfo.rowCount}
@@ -56,7 +60,25 @@ DATA INFORMATION:
 - Column types: ${JSON.stringify(dataInfo.columnTypes)}
 - Sample data: ${JSON.stringify(dataInfo.sampleRows)}
 
-USER QUERY: "${query}"
+USER QUESTION: "${query}"
+
+Respond concisely with insights from the data. Be specific with numbers and trends. Limit your answer to 3-5 sentences.
+`
+      : `
+Based on the following CSV data and user request, generate a chart configuration:
+
+DATA INFORMATION:
+- Row count: ${dataInfo.rowCount}
+- Columns: ${dataInfo.columns.join(', ')}
+- Column types: ${JSON.stringify(dataInfo.columnTypes)}
+- Sample data: ${JSON.stringify(dataInfo.sampleRows)}
+
+USER REQUEST: "${query}"
+
+Based on this data and request, provide:
+1. An insightful visualization configuration in JSON
+2. Key observations about the data (3-4 bullet points)
+3. A concise summary (1-2 sentences)
 
 Return ONLY a valid JSON object with the following structure:
 {
@@ -67,7 +89,7 @@ Return ONLY a valid JSON object with the following structure:
     "label": "X-Axis Label"
   },
   "yAxis": {
-    "dataKey": "column_name",
+    "dataKey": "column_name", 
     "label": "Y-Axis Label"
   },
   "series": [
@@ -102,7 +124,9 @@ Make sure all "dataKey" values correspond to actual column names in the dataset.
         messages: [
           {
             role: "system",
-            content: "You are a data visualization expert. Your task is to generate chart configurations based on CSV data and user queries. Return only valid JSON."
+            content: isQuestion 
+              ? "You are a data analyst expert. Your task is to analyze data and provide concise, insightful answers to questions. Focus on patterns, trends, and actionable insights."
+              : "You are a data visualization expert. Your task is to generate chart configurations based on CSV data and user queries. Provide both visualization settings and meaningful insights."
           },
           {
             role: "user",
@@ -125,23 +149,48 @@ Make sure all "dataKey" values correspond to actual column names in the dataset.
     
     const content = data.choices[0].message.content;
     
-    // Extract JSON from response (handle cases where GPT might wrap it in code blocks)
-    const jsonMatch = content.match(/```json\n([\s\S]*)\n```/) || content.match(/```([\s\S]*)```/) || [null, content];
-    const jsonString = jsonMatch[1] || content;
+    // Handle direct questions differently than visualization requests
+    if (isQuestion) {
+      toast.success("Analysis complete");
+      
+      // Create a simplified chart config for questions
+      return {
+        chartType: "none",
+        title: "Data Analysis",
+        xAxis: {
+          dataKey: "",
+          label: ""
+        },
+        series: [],
+        insights: [content.split('\n\n').join(' ')],
+        summary: "Analysis of your question about the data"
+      };
+    }
     
+    // For visualization requests, process the JSON response
     try {
-      const chartConfig = JSON.parse(jsonString);
-      console.log("Generated chart config:", chartConfig);
-      toast.success("Visualization generated successfully!");
-      return chartConfig;
-    } catch (jsonError) {
-      console.error("Failed to parse JSON from OpenAI response:", jsonString);
-      toast.error("Failed to parse chart configuration from AI response");
+      // Extract JSON from response (handle cases where GPT might wrap it in code blocks)
+      const jsonMatch = content.match(/```json\n([\s\S]*)\n```/) || content.match(/```([\s\S]*)```/) || [null, content];
+      const jsonString = jsonMatch[1] || content;
+      
+      try {
+        const chartConfig = JSON.parse(jsonString);
+        console.log("Generated chart config:", chartConfig);
+        toast.success("Visualization generated successfully!");
+        return chartConfig;
+      } catch (jsonError) {
+        console.error("Failed to parse JSON from OpenAI response:", jsonString);
+        toast.error("Failed to parse chart configuration from AI response");
+        return null;
+      }
+    } catch (error) {
+      console.error("OpenAI API error:", error);
+      toast.error(`Failed to generate chart: ${error instanceof Error ? error.message : "Unknown error"}`);
       return null;
     }
   } catch (error) {
     console.error("OpenAI API error:", error);
-    toast.error(`Failed to generate chart: ${error instanceof Error ? error.message : "Unknown error"}`);
+    toast.error(`Failed to generate visualization: ${error instanceof Error ? error.message : "Unknown error"}`);
     return null;
   }
 };

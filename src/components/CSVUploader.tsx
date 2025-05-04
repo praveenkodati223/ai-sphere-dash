@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FileIcon, Upload, FileSpreadsheetIcon, Loader2 } from "lucide-react";
-import { CSVData, parseCSVFile } from '@/services/csvService';
+import { CSVData, parseCSVFile, prepareDataSummary } from '@/services/csvService';
 import { useVisualization } from '@/contexts/VisualizationContext';
 
 const CSVUploader = () => {
@@ -30,7 +30,7 @@ const CSVUploader = () => {
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      if (file.type === "text/csv") {
+      if (file.type === "text/csv" || file.name.endsWith('.csv')) {
         handleCSVUpload(file, file.name.split('.').slice(0, -1).join('.'));
       } else {
         toast.error("Please upload only CSV files");
@@ -70,6 +70,16 @@ const CSVUploader = () => {
       // Parse the CSV file
       const csvData = await parseCSVFile(file);
       
+      if (!csvData.data || csvData.data.length === 0 || !csvData.columns || csvData.columns.length === 0) {
+        throw new Error("CSV file appears to be empty or invalid");
+      }
+      
+      console.log("Parsed CSV data:", {
+        rowCount: csvData.data.length,
+        columns: csvData.columns,
+        sampleData: csvData.data.slice(0, 3)
+      });
+      
       // Import the raw data directly without transformation
       importCustomData(datasetName, `Imported from ${file.name}`, csvData.data);
       
@@ -82,7 +92,7 @@ const CSVUploader = () => {
         analyzeData();
       }, 500);
       
-      toast.success(`Successfully imported ${file.name}`);
+      toast.success(`Successfully imported ${file.name} (${csvData.data.length} rows, ${csvData.columns.length} columns)`);
     } catch (error) {
       console.error('CSV parsing error:', error);
       toast.error(`Failed to parse CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -108,19 +118,21 @@ const CSVUploader = () => {
           onChange={handleFileChange}
           disabled={isUploading}
         />
-        <div className={`w-full px-4 py-2 border border-dashed ${dragActive ? 'border-sphere-cyan' : 'border-sphere-cyan/50'} rounded-md text-muted-foreground flex items-center gap-2`}>
+        <div className={`w-full px-4 py-3 border-2 border-dashed ${dragActive ? 'border-cyan-400' : 'border-slate-600'} rounded-md text-muted-foreground flex items-center gap-2 transition-colors duration-200`}>
           {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
           ) : (
-            <FileSpreadsheetIcon className="h-4 w-4" />
+            <FileSpreadsheetIcon className={`h-5 w-5 ${dragActive ? 'text-cyan-400' : 'text-slate-400'}`} />
           )}
-          {isUploading ? "Processing..." : dragActive ? "Drop CSV file here" : fileName || "Choose CSV file to import"}
+          <span className={`${dragActive ? 'text-cyan-400' : ''}`}>
+            {isUploading ? "Processing..." : dragActive ? "Drop CSV file here" : fileName || "Choose CSV file to import"}
+          </span>
         </div>
       </div>
       
       <Button 
         disabled={!fileName || isUploading}
-        className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex gap-2 items-center whitespace-nowrap"
+        className={`bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex gap-2 items-center whitespace-nowrap transition-all duration-200 ${!fileName ? 'opacity-70' : ''}`}
         onClick={() => fileName && document.querySelector<HTMLInputElement>('input[type="file"]')?.files?.[0] && 
           handleCSVUpload(document.querySelector<HTMLInputElement>('input[type="file"]')!.files![0], 
           fileName.split('.').slice(0, -1).join('.'))}

@@ -28,12 +28,20 @@ import {
   GaugeIcon,
   Download,
   InfoIcon,
-  PlayIcon
+  PlayIcon,
+  Sparkles
 } from "lucide-react";
 import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
 import { sampleCategories } from '@/services/dataService';
+
+const safeFormatNumber = (value: any): string => {
+  if (value === undefined || value === null || isNaN(Number(value))) {
+    return '0';
+  }
+  return Number(value).toLocaleString();
+};
 
 const Visualizations = () => {
   
@@ -45,7 +53,8 @@ const Visualizations = () => {
     activeDataset,
     analyzeData,
     analyzedData,
-    isAnalyzing
+    isAnalyzing,
+    customChartConfig
   } = useVisualization();
   
   const datasetCategories = activeDataset?.data.map(item => item.category) || [];
@@ -156,36 +165,24 @@ const Visualizations = () => {
     toast.success("Starting visualization process...");
   };
   
-  // Helper function to safely format numbers with toLocaleString
-  const safeFormatNumber = (value: any) => {
-    if (value === undefined || value === null) {
-      return '0';
-    }
-    return value.toLocaleString();
-  };
-  
-  // Helper function to calculate safe totals
-  const calculateRowTotal = (item: any) => {
-    const q1 = Number(item.q1 || 0);
-    const q2 = Number(item.q2 || 0);
-    const q3 = Number(item.q3 || 0);
-    const q4 = Number(item.q4 || 0);
-    return q1 + q2 + q3 + q4;
-  };
-  
   return (
     <div className="glass rounded-lg overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h3 className="text-xl font-semibold">Visualization</h3>
+        <h3 className="text-xl font-semibold flex items-center gap-2">
+          {currentView === 'chart' && <BarChart3Icon className="h-5 w-5 text-cyan-400" />}
+          {currentView === 'data' && <InfoIcon className="h-5 w-5 text-cyan-400" />}
+          {currentView === 'insights' && <Sparkles className="h-5 w-5 text-cyan-400" />}
+          Visualization
+        </h3>
         
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10">
+              <Button variant="outline" className="border-cyan-500/50 hover:border-cyan-500 hover:bg-cyan-500/10">
                 {currentChartInfo.name}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-slate-900 border border-sphere-cyan/20">
+            <DropdownMenuContent className="w-56 bg-slate-900 border border-cyan-500/20">
               {chartGroups.map((group) => (
                 <React.Fragment key={group.label}>
                   <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
@@ -193,7 +190,7 @@ const Visualizations = () => {
                     {group.charts.map((chart) => (
                       <DropdownMenuItem 
                         key={chart.id}
-                        className="cursor-pointer hover:bg-sphere-cyan/10 flex items-center"
+                        className="cursor-pointer hover:bg-cyan-500/10 flex items-center"
                         onClick={() => setSelectedChart(chart.id as any)}
                       >
                         {chart.icon}
@@ -206,7 +203,7 @@ const Visualizations = () => {
               ))}
               <DropdownMenuGroup>
                 <DropdownMenuItem 
-                  className="cursor-pointer hover:bg-sphere-cyan/10"
+                  className="cursor-pointer hover:bg-cyan-500/10"
                   onClick={handleCustomChartBuilder}
                 >
                   Custom Chart Builder
@@ -226,7 +223,7 @@ const Visualizations = () => {
           <Button 
             variant="outline" 
             size="icon" 
-            className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+            className="border-cyan-500/50 hover:border-cyan-500 hover:bg-cyan-500/10"
             onClick={handleExportData}
             title="Export data"
           >
@@ -237,7 +234,7 @@ const Visualizations = () => {
       
       <div className="px-4 py-2 bg-slate-800/30 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <InfoIcon className="h-4 w-4 text-sphere-cyan" />
+          <InfoIcon className="h-4 w-4 text-cyan-400" />
           <p className="text-sm text-slate-300">{currentChartInfo.description}</p>
         </div>
       </div>
@@ -249,7 +246,7 @@ const Visualizations = () => {
               <div className="text-center">
                 <p className="text-lg mb-4">Select visualization options and click start</p>
                 <Button 
-                  className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                  className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex items-center gap-2"
                   onClick={handleStartVisualization}
                 >
                   <PlayIcon className="h-4 w-4" />
@@ -277,7 +274,7 @@ const Visualizations = () => {
                   <div className="text-lg mb-2">Data ready for visualization</div>
                   <p className="text-sm text-slate-400 mb-4">Click Start Visualization to analyze and display your data</p>
                   <Button 
-                    className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                    className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex items-center gap-2"
                     onClick={handleStartVisualization}
                   >
                     <PlayIcon className="h-4 w-4" />
@@ -289,18 +286,18 @@ const Visualizations = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    {activeDataset && activeDataset.data.length > 0 && Object.keys(activeDataset.data[0]).map((column, index) => (
+                    {activeDataset && activeDataset.data.length > 0 && Object.keys(activeDataset.data[0] || {}).map((column, index) => (
                       <th key={index} className="text-left p-2">{column}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {activeDataset.data.map((item, idx) => (
+                  {activeDataset?.data.map((item, idx) => (
                     <tr key={idx} className="border-b border-white/5">
-                      {Object.entries(item).map(([key, value], colIdx) => (
+                      {Object.entries(item || {}).map(([key, value], colIdx) => (
                         <td key={`${idx}-${colIdx}`} className="p-2">
                           {value !== undefined && value !== null ? 
-                            (typeof value === 'number' ? safeFormatNumber(value) : value) : 
+                            (typeof value === 'number' ? safeFormatNumber(value) : String(value)) : 
                             ''}
                         </td>
                       ))}
@@ -317,8 +314,9 @@ const Visualizations = () => {
             {isAnalyzing ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
                   <div className="text-lg mb-2">Analyzing data...</div>
-                  <div className="animate-pulse text-sphere-cyan">This may take a moment</div>
+                  <div className="text-sm text-cyan-400">This may take a moment</div>
                 </div>
               </div>
             ) : !analyzedData ? (
@@ -327,7 +325,7 @@ const Visualizations = () => {
                   <div className="text-lg mb-2">No insights available</div>
                   <p className="text-sm text-slate-400 mb-4">Click Start Visualization to analyze and generate insights</p>
                   <Button 
-                    className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90 flex items-center gap-2"
+                    className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex items-center gap-2"
                     onClick={handleStartVisualization}
                   >
                     <PlayIcon className="h-4 w-4" />
@@ -337,30 +335,56 @@ const Visualizations = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-slate-800 border-sphere-cyan/20">
+                {/* Display insights from AI if available */}
+                {customChartConfig && customChartConfig.insights && customChartConfig.insights.length > 0 && (
+                  <Card className="bg-slate-800 border-purple-500/20 md:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-purple-400" />
+                        AI-Generated Insights
+                      </CardTitle>
+                      <CardDescription>{customChartConfig.summary}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="list-disc pl-5 space-y-2">
+                        {customChartConfig.insights.map((insight, idx) => (
+                          <li key={idx} className="text-slate-300">{insight}</li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+              
+                <Card className="bg-slate-800 border-cyan-500/20">
                   <CardHeader>
-                    <CardTitle>Summary</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <InfoIcon className="h-5 w-5 text-cyan-400" />
+                      Summary
+                    </CardTitle>
                     <CardDescription>{analyzedData.summary}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Total: {safeFormatNumber(analyzedData.metrics?.total)}</li>
                       <li>Average: {safeFormatNumber(analyzedData.metrics?.average)}</li>
-                      <li>Max: {safeFormatNumber(analyzedData.metrics?.max)}</li>
-                      <li>Min: {safeFormatNumber(analyzedData.metrics?.min)}</li>
+                      <li>Maximum: {safeFormatNumber(analyzedData.metrics?.max)}</li>
+                      <li>Minimum: {safeFormatNumber(analyzedData.metrics?.min)}</li>
                     </ul>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-slate-800 border-sphere-cyan/20">
+                <Card className="bg-slate-800 border-purple-500/20">
                   <CardHeader>
-                    <CardTitle>Key Insights</CardTitle>
-                    <CardDescription>AI-generated insights from your data</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-purple-400" />
+                      Key Insights
+                    </CardTitle>
+                    <CardDescription>Insights from your data</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-2">
                       {analyzedData.insights && analyzedData.insights.map((insight, idx) => (
-                        <li key={idx}>{insight}</li>
+                        <li key={idx} className="text-slate-300">{insight}</li>
                       ))}
                     </ul>
                   </CardContent>
@@ -368,7 +392,7 @@ const Visualizations = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+                      className="text-xs border-cyan-500/50 hover:border-cyan-500 hover:bg-cyan-500/10"
                       onClick={() => analyzeData()}
                     >
                       Regenerate Insights
@@ -377,9 +401,12 @@ const Visualizations = () => {
                 </Card>
                 
                 {analyzedData.breakdown && (
-                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                  <Card className="bg-slate-800 border-cyan-500/20 md:col-span-2">
                     <CardHeader>
-                      <CardTitle>Category Breakdown</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <PieChartIcon className="h-5 w-5 text-cyan-400" />
+                        Category Breakdown
+                      </CardTitle>
                       <CardDescription>Performance by category</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -388,7 +415,7 @@ const Visualizations = () => {
                           <div key={idx} className="flex items-center justify-between">
                             <div className="w-1/3">{item.category}</div>
                             <div className="w-1/3 text-right">{safeFormatNumber(item.value)}</div>
-                            <div className="w-1/3 text-right text-sphere-cyan">{item.percentage}%</div>
+                            <div className="w-1/3 text-right text-cyan-400">{item.percentage}%</div>
                           </div>
                         ))}
                       </div>
@@ -397,28 +424,31 @@ const Visualizations = () => {
                 )}
                 
                 {analyzedData.trendData && (
-                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                  <Card className="bg-slate-800 border-purple-500/20 md:col-span-2">
                     <CardHeader>
-                      <CardTitle>Trend Analysis</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <LineChartIcon className="h-5 w-5 text-purple-400" />
+                        Trend Analysis
+                      </CardTitle>
                       <CardDescription>Growth patterns and seasonal trends</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Growth Rate</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-purple-400">
                             {analyzedData.trendData.growthRate ? `${analyzedData.trendData.growthRate}%` : 'N/A'}
                           </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Seasonality</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-cyan-400">
                             {analyzedData.trendData.seasonality || 'N/A'}
                           </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Forecast</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-blue-400">
                             {analyzedData.trendData.forecast || 'N/A'}
                           </div>
                         </div>
@@ -428,22 +458,25 @@ const Visualizations = () => {
                 )}
                 
                 {analyzedData.predictionData && (
-                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                  <Card className="bg-slate-800 border-cyan-500/20 md:col-span-2">
                     <CardHeader>
-                      <CardTitle>Predictions</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <ChartBarIcon className="h-5 w-5 text-cyan-400" />
+                        Predictions
+                      </CardTitle>
                       <CardDescription>Future projections based on historical data</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Predicted Growth</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-cyan-400">
                             {analyzedData.predictionData.predictedGrowth ? `${analyzedData.predictionData.predictedGrowth}%` : 'N/A'}
                           </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
-                          <div className="text-sm text-slate-300">Confidence Interval</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-sm text-slate-300">Confidence Range</div>
+                          <div className="text-xl font-bold text-cyan-400">
                             {analyzedData.predictionData.confidenceInterval ? 
                               `${safeFormatNumber(analyzedData.predictionData.confidenceInterval[0])} - ${safeFormatNumber(analyzedData.predictionData.confidenceInterval[1])}` :
                               'N/A'
@@ -456,60 +489,32 @@ const Visualizations = () => {
                 )}
                 
                 {analyzedData.correlationData && (
-                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
+                  <Card className="bg-slate-800 border-purple-500/20 md:col-span-2">
                     <CardHeader>
-                      <CardTitle>Correlation Analysis</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <ActivityIcon className="h-5 w-5 text-purple-400" />
+                        Correlation Analysis
+                      </CardTitle>
                       <CardDescription>Relationships between variables</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Strongest Correlation</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-purple-400">
                             {analyzedData.correlationData.strongestCorrelation || 'N/A'}
                           </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Primary Driver</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-cyan-400">
                             {analyzedData.correlationData.primaryDriver || 'N/A'}
                           </div>
                         </div>
                         <div className="p-3 bg-slate-700/40 rounded-lg">
                           <div className="text-sm text-slate-300">Factors Analyzed</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
+                          <div className="text-xl font-bold text-blue-400">
                             {analyzedData.correlationData.factorsAnalyzed || 'N/A'}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {analyzedData.anomalyData && (
-                  <Card className="bg-slate-800 border-sphere-cyan/20 md:col-span-2">
-                    <CardHeader>
-                      <CardTitle>Anomaly Detection</CardTitle>
-                      <CardDescription>Unusual patterns and outliers</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-3 bg-slate-700/40 rounded-lg">
-                          <div className="text-sm text-slate-300">Anomalies Detected</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
-                            {analyzedData.anomalyData.anomaliesDetected !== undefined ? analyzedData.anomalyData.anomaliesDetected : 'N/A'}
-                          </div>
-                        </div>
-                        <div className="p-3 bg-slate-700/40 rounded-lg">
-                          <div className="text-sm text-slate-300">Detection Confidence</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
-                            {analyzedData.anomalyData.confidence ? `${analyzedData.anomalyData.confidence}%` : 'N/A'}
-                          </div>
-                        </div>
-                        <div className="p-3 bg-slate-700/40 rounded-lg">
-                          <div className="text-sm text-slate-300">Impact Score</div>
-                          <div className="text-xl font-bold text-sphere-cyan">
-                            {analyzedData.anomalyData.impactScore ? `${analyzedData.anomalyData.impactScore}/100` : 'N/A'}
                           </div>
                         </div>
                       </div>
