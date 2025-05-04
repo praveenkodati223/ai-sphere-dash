@@ -80,8 +80,22 @@ const CSVUploader = () => {
         sampleData: csvData.data.slice(0, 3)
       });
       
-      // Import the raw data directly without transformation
-      importCustomData(datasetName, `Imported from ${file.name}`, csvData.data);
+      // Convert string numbers to actual numbers for better visualization
+      const processedData = csvData.data.map(row => {
+        const processedRow: Record<string, any> = {};
+        Object.entries(row).forEach(([key, value]) => {
+          // Try to convert to number if it looks like one
+          if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+            processedRow[key] = Number(value);
+          } else {
+            processedRow[key] = value;
+          }
+        });
+        return processedRow;
+      });
+      
+      // Import the processed data
+      importCustomData(datasetName, `Imported from ${file.name}`, processedData);
       
       // Set the analysis type and switch to data view first
       setAnalysisType('trends');
@@ -90,6 +104,8 @@ const CSVUploader = () => {
       // Force analysis to run
       setTimeout(() => {
         analyzeData();
+        // After analysis, switch to chart view so visualization is visible
+        setCurrentView('chart');
       }, 500);
       
       toast.success(`Successfully imported ${file.name} (${csvData.data.length} rows, ${csvData.columns.length} columns)`);

@@ -8,7 +8,7 @@ import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
 
 const Index = () => {
-  const { activeDataset } = useVisualization();
+  const { activeDataset, exportData } = useVisualization();
   const navigate = useNavigate();
   
   return (

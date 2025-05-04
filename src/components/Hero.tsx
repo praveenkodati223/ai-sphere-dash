@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BarChart3, LineChart, PieChart, Table, Upload, Sparkles, FileSpreadsheet } from "lucide-react";
 import ChartComponent from "./ChartComponent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
@@ -57,46 +57,114 @@ const Hero = () => {
             </div>
             
             {/* Interactive Dashboard Preview Content */}
-            <div className="mt-8 p-4">
+            <div className="mt-12 p-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">Sales Dashboard</h3>
+                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                  <Sparkles className="text-cyan-400 h-5 w-5" />
+                  Sphere AI Dashboard
+                </h3>
                 <div className="flex gap-2">
                   <Tabs defaultValue="charts" className="w-[200px]">
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="charts" className="text-xs">Charts</TabsTrigger>
-                      <TabsTrigger value="tables" className="text-xs">Tables</TabsTrigger>
-                      <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
+                      <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
+                      <TabsTrigger value="ai" className="text-xs">AI</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="glass p-3 rounded-lg">
-                  <div className="h-[130px]">
-                    <ChartComponent type="bar" />
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="glass p-3 rounded-lg col-span-1">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-sm font-medium text-white">Data Types</h4>
+                    <FileSpreadsheet className="h-4 w-4 text-cyan-400" />
                   </div>
-                  <p className="text-xs text-center mt-2 text-slate-300">Revenue by Category</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">CSV Files</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Excel</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Database</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">API</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="glass p-3 rounded-lg">
-                  <div className="h-[130px]">
-                    <ChartComponent type="line" />
+                
+                <div className="glass p-3 rounded-lg col-span-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-sm font-medium text-white">Visualization Types</h4>
+                    <BarChart3 className="h-4 w-4 text-purple-400" />
                   </div>
-                  <p className="text-xs text-center mt-2 text-slate-300">Monthly Growth</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Bar Charts</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Line Charts</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Pie Charts</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Area Charts</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Scatter Plots</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-300">Radar Charts</span>
+                      <span className="text-xs font-medium text-white">✓</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <div className="mt-4">
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="glass p-3 rounded-lg">
-                  <div className="h-[100px]">
-                    <ChartComponent type="area" />
+                  <div className="h-[90px] flex items-center justify-center">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center">
+                        <LineChart className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-medium text-white">AI-Powered Analysis</h5>
+                        <p className="text-xs text-slate-300 mt-1">Automated insights and pattern detection</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-center mt-2 text-slate-300">Yearly Performance</p>
+                </div>
+                <div className="glass p-3 rounded-lg">
+                  <div className="h-[90px] flex items-center justify-center">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center">
+                        <Upload className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-medium text-white">Easy Data Import</h5>
+                        <p className="text-xs text-slate-300 mt-1">Drag & drop any data source</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-sphere-dark to-transparent"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-sphere-dark to-transparent"></div>
           </div>
         </div>
       </div>
@@ -105,9 +173,7 @@ const Hero = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           <div className="glass p-6 animate-float" style={{ animationDelay: "0s" }}>
             <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-sphere-purple to-sphere-cyan mb-4 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-              </svg>
+              <BarChart3 className="h-6 w-6" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Interactive Visualizations</h3>
             <p className="text-slate-300">Create stunning charts and graphs with just a few clicks. Choose from bar, line, pie charts and more.</p>
@@ -115,9 +181,7 @@ const Hero = () => {
           
           <div className="glass p-6 animate-float" style={{ animationDelay: "0.2s" }}>
             <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-sphere-purple to-sphere-cyan mb-4 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
+              <Sparkles className="h-6 w-6" />
             </div>
             <h3 className="text-xl font-semibold mb-2">AI-Powered Analysis</h3>
             <p className="text-slate-300">Let our AI analyze your data and suggest the best visualizations. Ask questions in plain English.</p>
@@ -125,9 +189,7 @@ const Hero = () => {
           
           <div className="glass p-6 animate-float" style={{ animationDelay: "0.4s" }}>
             <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-sphere-purple to-sphere-cyan mb-4 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
+              <FileSpreadsheet className="h-6 w-6" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Easy Data Import</h3>
             <p className="text-slate-300">Import data from CSV, Excel, or connect to databases. Automatically detect data types and relationships.</p>
