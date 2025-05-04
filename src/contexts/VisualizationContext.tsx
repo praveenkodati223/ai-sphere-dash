@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
@@ -117,6 +116,7 @@ interface VisualizationContextType {
   setCategory: (category: string | null) => void;
   region: string | null;
   setRegion: (region: string | null) => void;
+  exportData: () => void;
 }
 
 export const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -302,6 +302,48 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setActiveDataset(newDataset);
   };
 
+  const exportData = () => {
+    if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) {
+      toast.error("No data available to export");
+      return;
+    }
+    
+    try {
+      // Convert the data to CSV format
+      const columns = Object.keys(activeDataset.data[0]);
+      const csvContent = [
+        columns.join(','), // Header row
+        ...activeDataset.data.map(row => 
+          columns.map(col => {
+            const value = row[col];
+            // Handle values that might contain commas
+            return typeof value === 'string' && value.includes(',') 
+              ? `"${value}"` 
+              : value;
+          }).join(',')
+        )
+      ].join('\n');
+      
+      // Create a Blob containing the CSV data
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create a download link and trigger the download
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${activeDataset.name.toLowerCase().replace(/\s+/g, '-')}_export.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Failed to export data");
+    }
+  };
+
   const value = {
     datasets,
     activeDataset,
@@ -332,7 +374,8 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     category,
     setCategory,
     region,
-    setRegion
+    setRegion,
+    exportData
   };
 
   return (

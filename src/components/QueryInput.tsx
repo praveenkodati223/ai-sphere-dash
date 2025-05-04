@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -11,7 +10,8 @@ import {
   LineChart, 
   BarChart, 
   PieChart, 
-  Wand2
+  Wand2,
+  AlertTriangle
 } from "lucide-react";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { generateChartFromQuery } from '@/services/openaiService';
@@ -22,6 +22,7 @@ const QueryInput = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [recentQueries, setRecentQueries] = useState<string[]>([]);
   const [showAIFeatures, setShowAIFeatures] = useState<boolean>(false);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState<boolean>(false);
   
   const { 
     activeDataset, 
@@ -31,6 +32,12 @@ const QueryInput = () => {
     setCustomChartConfig
   } = useVisualization();
   
+  // Check if OpenAI API key is configured
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    setApiKeyConfigured(!!apiKey);
+  }, []);
+
   // Example queries for users to try
   const exampleQueries = [
     "Show sales trends over the last year",
@@ -50,6 +57,12 @@ const QueryInput = () => {
     
     if (!query.trim()) {
       toast.error("Please enter a question");
+      return;
+    }
+
+    // Check if OpenAI API key is configured
+    if (!apiKeyConfigured) {
+      toast.error("OpenAI API key is not configured");
       return;
     }
     
@@ -187,6 +200,25 @@ const QueryInput = () => {
           AI Tools
         </Button>
       </div>
+
+      {!apiKeyConfigured && (
+        <div className="bg-yellow-900/20 border border-yellow-600/50 p-3 rounded-lg mb-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-yellow-500">OpenAI API Key Required</h4>
+              <p className="text-sm text-yellow-500/90 mb-1">
+                To use the AI features, you need to add your OpenAI API key to the environment variables.
+              </p>
+              <ol className="list-decimal list-inside text-xs text-yellow-500/80 space-y-1">
+                <li>Create a <code>.env</code> file in the root of your project</li>
+                <li>Add this line: <code>VITE_OPENAI_API_KEY=your_api_key_here</code></li>
+                <li>Restart the application</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
       
       {showAIFeatures && (
         <div className="mb-4 bg-slate-800/50 rounded-md p-3 border border-sphere-cyan/20">
@@ -246,7 +278,7 @@ const QueryInput = () => {
           />
           <Button 
             type="submit" 
-            disabled={isProcessing || !query.trim()}
+            disabled={isProcessing || !query.trim() || !apiKeyConfigured}
             className="bg-gradient-to-r from-sphere-purple to-sphere-cyan hover:opacity-90"
           >
             {isProcessing ? (

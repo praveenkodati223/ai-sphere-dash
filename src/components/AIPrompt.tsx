@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, BrainCircuit, BarChart, LineChart, PieChart, ListFilter } from "lucide-react";
+import { ArrowRight, BrainCircuit, BarChart, LineChart, PieChart, ListFilter, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useVisualization } from '@/contexts/VisualizationContext';
 
@@ -29,6 +28,7 @@ const AIPrompt = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [dataInsights, setDataInsights] = useState<DataInsightsResponse | null>(null);
+  const [showApiKeyInfo, setShowApiKeyInfo] = useState(false);
   const { 
     activeDataset, 
     setSelectedChart, 
@@ -286,6 +286,14 @@ const AIPrompt = () => {
       return;
     }
     
+    // Check if OpenAI API key is configured
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!apiKey) {
+      toast.error("OpenAI API key is not configured");
+      setShowApiKeyInfo(true);
+      return;
+    }
+    
     setIsProcessing(true);
     setDataInsights(null);
     
@@ -380,6 +388,32 @@ const AIPrompt = () => {
         <BrainCircuit className="text-sphere-cyan" />
         <span className="text-gradient">AI</span> Insights
       </h3>
+      
+      {showApiKeyInfo && (
+        <div className="bg-yellow-900/20 border border-yellow-600/50 p-3 rounded-lg mb-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-yellow-500">OpenAI API Key Required</h4>
+              <p className="text-sm text-yellow-500/90 mb-2">
+                To use the AI features, you need to add your OpenAI API key to the environment variables.
+              </p>
+              <ol className="list-decimal list-inside text-xs text-yellow-500/80 space-y-1">
+                <li>Create a <code>.env</code> file in the root of your project</li>
+                <li>Add this line: <code>VITE_OPENAI_API_KEY=your_api_key_here</code></li>
+                <li>Restart the application</li>
+              </ol>
+              <Button 
+                className="mt-2 bg-yellow-600/50 hover:bg-yellow-600 text-xs"
+                onClick={() => setShowApiKeyInfo(false)}
+                size="sm"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <form onSubmit={handlePromptSubmit} className="mb-4">
         <div className="flex gap-2">

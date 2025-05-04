@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -99,6 +100,9 @@ const DataPreview = () => {
       
       return true;
     });
+
+  // Get all columns from the dataset  
+  const columns = filteredData.length > 0 ? Object.keys(filteredData[0]) : [];
   
   return (
     <div className="space-y-4">
@@ -173,42 +177,34 @@ const DataPreview = () => {
               <TableHead className="w-10 text-center">
                 <SlidersHorizontal className="h-4 w-4 mx-auto" />
               </TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Q1</TableHead>
-              <TableHead>Q2</TableHead>
-              <TableHead>Q3</TableHead>
-              <TableHead>Q4</TableHead>
-              <TableHead>Total</TableHead>
-              {activeDataset.data[0]?.region && <TableHead>Region</TableHead>}
+              {columns.map((column, index) => (
+                <TableHead key={index}>{column}</TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((item, idx) => {
-              const total = item.q1 + item.q2 + item.q3 + item.q4;
-              
-              return (
-                <TableRow 
-                  key={idx}
-                  className={selectedRows.includes(idx) ? "bg-sphere-cyan/10" : ""}
-                >
-                  <TableCell>
-                    <div className="flex items-center justify-center">
-                      <Switch 
-                        checked={selectedRows.includes(idx)} 
-                        onCheckedChange={() => handleRowSelect(idx)}
-                      />
-                    </div>
+            {filteredData.map((item, idx) => (
+              <TableRow 
+                key={idx}
+                className={selectedRows.includes(idx) ? "bg-sphere-cyan/10" : ""}
+              >
+                <TableCell>
+                  <div className="flex items-center justify-center">
+                    <Switch 
+                      checked={selectedRows.includes(idx)} 
+                      onCheckedChange={() => handleRowSelect(idx)}
+                    />
+                  </div>
+                </TableCell>
+                {columns.map((column, colIdx) => (
+                  <TableCell key={colIdx}>
+                    {typeof item[column] === 'number' 
+                      ? item[column].toLocaleString() 
+                      : String(item[column] || '')}
                   </TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{item.q1.toLocaleString()}</TableCell>
-                  <TableCell>{item.q2.toLocaleString()}</TableCell>
-                  <TableCell>{item.q3.toLocaleString()}</TableCell>
-                  <TableCell>{item.q4.toLocaleString()}</TableCell>
-                  <TableCell className="font-semibold">{total.toLocaleString()}</TableCell>
-                  {item.region && <TableCell>{item.region}</TableCell>}
-                </TableRow>
-              );
-            })}
+                ))}
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

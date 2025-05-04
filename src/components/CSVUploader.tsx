@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FileIcon, Upload, FileSpreadsheetIcon, Loader2 } from "lucide-react";
-import { CSVData, parseCSVFile, prepareDataSummary } from '@/services/csvService';
+import { CSVData, parseCSVFile } from '@/services/csvService';
 import { useVisualization } from '@/contexts/VisualizationContext';
 
 const CSVUploader = () => {
@@ -69,42 +70,8 @@ const CSVUploader = () => {
       // Parse the CSV file
       const csvData = await parseCSVFile(file);
       
-      // Create a dataset in the format expected by the visualization context
-      const datasetData = csvData.data.map(row => {
-        // Try to convert numeric values
-        const processedRow: Record<string, any> = {};
-        for (const [key, value] of Object.entries(row)) {
-          const numValue = Number(value);
-          processedRow[key] = !isNaN(numValue) ? numValue : value;
-        }
-
-        // Build an object that matches the expected structure
-        // Our app expects data with q1, q2, q3, q4, category properties
-        const result: Record<string, any> = {
-          category: processedRow[csvData.columns[0]] || 'Unknown',
-          q1: 0,
-          q2: 0,
-          q3: 0,
-          q4: 0,
-        };
-        
-        // Map any numeric columns to quarters
-        const numericColumns = csvData.columns.filter(col => 
-          !isNaN(Number(processedRow[col]))
-        );
-        
-        // Map the first 4 numeric columns to q1-q4
-        numericColumns.slice(0, 4).forEach((col, idx) => {
-          const quarterKey = `q${idx + 1}` as 'q1' | 'q2' | 'q3' | 'q4';
-          result[quarterKey] = Number(processedRow[col]) || 0;
-        });
-        
-        // Add all original columns as well
-        return { ...result, ...processedRow };
-      });
-      
-      // Import the custom data
-      importCustomData(datasetName, `Imported from ${file.name}`, datasetData);
+      // Import the raw data directly without transformation
+      importCustomData(datasetName, `Imported from ${file.name}`, csvData.data);
       
       // Set the analysis type
       setAnalysisType('trends');
