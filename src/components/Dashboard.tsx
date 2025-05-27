@@ -9,7 +9,7 @@ import QueryInput from './QueryInput';
 import DataPreview from './DataPreview';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, ChartBar, Filter, MessageSquare, Download, Share2, Sparkles, LineChart, BarChart3, PieChart, Activity, Info } from 'lucide-react';
+import { Database, ChartBar, MessageSquare, Download, Share2, Sparkles, LineChart, BarChart3, PieChart, Activity, Info } from 'lucide-react';
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
@@ -103,9 +103,10 @@ const Dashboard = () => {
           {/* Data Import Section */}
           <div className="col-span-12">
             <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center">
-                <Database className="h-5 w-5 text-cyan-400 mr-2" />
+              <div className="flex items-center gap-4">
+                <Database className="h-5 w-5 text-cyan-400" />
                 <h2 className="text-2xl font-bold">Data Workbench</h2>
+                {activeDataset && <FilterPanel />}
               </div>
               {activeDataset && (
                 <div className="flex gap-2">
@@ -196,108 +197,82 @@ const Dashboard = () => {
               
               {/* Tab Content */}
               <TabsContent value="data" className="mt-0">
-                <div className="grid grid-cols-12 gap-6">
-                  <div className="col-span-12 md:col-span-3">
-                    <Card className="bg-slate-800/50 border-purple-500/20">
-                      <CardContent className="p-4">
-                        <FilterPanel />
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <div className="col-span-12 md:col-span-9">
-                    <Card className="bg-slate-800/50 border-cyan-500/20">
-                      <CardContent className="p-6">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                          <Database className="text-cyan-400" />
-                          Data Preview & Selection
-                        </h3>
-                        <DataPreview />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <Card className="bg-slate-800/50 border-cyan-500/20">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                      <Database className="text-cyan-400" />
+                      Data Preview & Selection
+                    </h3>
+                    <DataPreview />
+                  </CardContent>
+                </Card>
               </TabsContent>
               
               <TabsContent value="visualize" className="mt-0">
-                <div className="grid grid-cols-12 gap-6">
-                  <div className="col-span-12 md:col-span-3">
-                    <Card className="bg-slate-800/50 border-purple-500/20">
-                      <CardContent className="p-4">
-                        <FilterPanel />
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <div className="col-span-12 md:col-span-9">
-                    <Card className="bg-slate-800/50 border-cyan-500/20">
-                      <CardContent className="p-2">
-                        <Visualizations />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <Card className="bg-slate-800/50 border-cyan-500/20">
+                  <CardContent className="p-2">
+                    <Visualizations />
+                  </CardContent>
+                </Card>
               </TabsContent>
               
               <TabsContent value="insights" className="mt-0">
-                <div className="grid grid-cols-12 gap-6">
-                  <div className="col-span-12">
-                    <Card className="bg-slate-800/50 border-cyan-500/20">
-                      <CardContent className="p-6">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                          <MessageSquare className="text-cyan-400" />
-                          AI Insights
-                        </h3>
-                        <p className="mb-6 text-slate-300">
-                          Discover hidden patterns and valuable insights in your data through advanced AI analysis.
+                <Card className="bg-slate-800/50 border-cyan-500/20">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                      <MessageSquare className="text-cyan-400" />
+                      AI Insights
+                    </h3>
+                    <p className="mb-6 text-slate-300">
+                      Discover hidden patterns and valuable insights in your data through advanced AI analysis.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <Card className="bg-slate-800/80 border-purple-500/10 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <BarChart3 className="h-5 w-5 text-purple-400" />
+                          <h4 className="font-medium">Data Patterns</h4>
+                        </div>
+                        <p className="text-sm text-slate-300">
+                          Identify trends, seasonality, and cycles in your time-series data
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                          <Card className="bg-slate-800/80 border-purple-500/10 p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <BarChart3 className="h-5 w-5 text-purple-400" />
-                              <h4 className="font-medium">Data Patterns</h4>
-                            </div>
-                            <p className="text-sm text-slate-300">
-                              Identify trends, seasonality, and cycles in your time-series data
-                            </p>
-                          </Card>
-                          <Card className="bg-slate-800/80 border-cyan-500/10 p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Activity className="h-5 w-5 text-cyan-400" />
-                              <h4 className="font-medium">Correlations</h4>
-                            </div>
-                            <p className="text-sm text-slate-300">
-                              Discover relationships between different variables in your dataset
-                            </p>
-                          </Card>
-                          <Card className="bg-slate-800/80 border-blue-500/10 p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <PieChart className="h-5 w-5 text-blue-400" />
-                              <h4 className="font-medium">Anomalies</h4>
-                            </div>
-                            <p className="text-sm text-slate-300">
-                              Detect outliers and unusual patterns that require attention
-                            </p>
-                          </Card>
+                      </Card>
+                      <Card className="bg-slate-800/80 border-cyan-500/10 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="h-5 w-5 text-cyan-400" />
+                          <h4 className="font-medium">Correlations</h4>
                         </div>
-                        
-                        <div className="flex flex-col gap-4 items-center mb-4">
-                          <Button 
-                            onClick={() => setActiveTab('visualize')}
-                            className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 px-6"
-                          >
-                            Generate AI-Powered Visualizations
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            onClick={() => navigate('/analytics')}
-                            className="border-cyan-500/30 hover:border-cyan-500 hover:bg-cyan-500/10"
-                          >
-                            View Detailed Analytics
-                          </Button>
+                        <p className="text-sm text-slate-300">
+                          Discover relationships between different variables in your dataset
+                        </p>
+                      </Card>
+                      <Card className="bg-slate-800/80 border-blue-500/10 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <PieChart className="h-5 w-5 text-blue-400" />
+                          <h4 className="font-medium">Anomalies</h4>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                        <p className="text-sm text-slate-300">
+                          Detect outliers and unusual patterns that require attention
+                        </p>
+                      </Card>
+                    </div>
+                    
+                    <div className="flex flex-col gap-4 items-center mb-4">
+                      <Button 
+                        onClick={() => setActiveTab('visualize')}
+                        className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 px-6"
+                      >
+                        Generate AI-Powered Visualizations
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate('/analytics')}
+                        className="border-cyan-500/30 hover:border-cyan-500 hover:bg-cyan-500/10"
+                      >
+                        View Detailed Analytics
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </>
