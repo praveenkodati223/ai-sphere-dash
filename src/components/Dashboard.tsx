@@ -7,9 +7,14 @@ import FilterPanel from './FilterPanel';
 import AIPrompt from './AIPrompt';
 import QueryInput from './QueryInput';
 import DataPreview from './DataPreview';
+import SmartInsights from './SmartInsights';
+import MLInsights from './MLInsights';
+import DatasetComparison from './DatasetComparison';
+import HelpAssistant from './HelpAssistant';
+import GoalTracker from './GoalTracker';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, ChartBar, MessageSquare, Download, Share2, Sparkles, LineChart, BarChart3, PieChart, Activity, Info } from 'lucide-react';
+import { Database, ChartBar, MessageSquare, Download, Share2, Sparkles, LineChart, BarChart3, PieChart, Activity, Info, Target, GitCompare, HelpCircle, TrendingUp } from 'lucide-react';
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
@@ -50,7 +55,7 @@ const Dashboard = () => {
             Data Visualization Platform
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Transform your raw data into meaningful insights with AI-powered visualizations
+            Transform your raw data into meaningful insights with smart analysis and ML-powered visualizations
           </p>
         </div>
         
@@ -61,11 +66,11 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardContent className="p-6">
                 <div className="mb-4 p-3 bg-cyan-500/20 rounded-full w-fit">
-                  <LineChart className="h-6 w-6 text-cyan-400" />
+                  <TrendingUp className="h-6 w-6 text-cyan-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Advanced Visualizations</h3>
+                <h3 className="text-xl font-bold mb-2">Smart Analysis</h3>
                 <CardDescription className="text-gray-300">
-                  Create stunning charts and graphs with just a few clicks. Choose from bar, line, pie charts and more.
+                  Automatic detection of missing data, outliers, duplicates, and trends with actionable insights.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -74,11 +79,11 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardContent className="p-6">
                 <div className="mb-4 p-3 bg-purple-500/20 rounded-full w-fit">
-                  <Sparkles className="h-6 w-6 text-purple-400" />
+                  <Target className="h-6 w-6 text-purple-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">AI-Powered Insights</h3>
+                <h3 className="text-xl font-bold mb-2">Goal Tracking</h3>
                 <CardDescription className="text-gray-300">
-                  Get automatic analysis and key insights from your data using our built-in AI capabilities.
+                  Set custom goals and get real-time alerts when your data crosses important thresholds.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -87,11 +92,11 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardContent className="p-6">
                 <div className="mb-4 p-3 bg-blue-500/20 rounded-full w-fit">
-                  <Database className="h-6 w-6 text-blue-400" />
+                  <GitCompare className="h-6 w-6 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Easy Data Import</h3>
+                <h3 className="text-xl font-bold mb-2">Dataset Comparison</h3>
                 <CardDescription className="text-gray-300">
-                  Import data from CSV files or connect directly to external APIs with our simple interface.
+                  Compare multiple datasets to identify differences, common patterns, and data variations.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -135,7 +140,17 @@ const Dashboard = () => {
         
         {activeDataset && (
           <>
-            {/* Query and AI Section */}
+            {/* Smart Insights and Help */}
+            <div className="grid grid-cols-12 gap-6 mt-6">
+              <div className="col-span-12 md:col-span-8">
+                <SmartInsights />
+              </div>
+              <div className="col-span-12 md:col-span-4">
+                <HelpAssistant />
+              </div>
+            </div>
+            
+            {/* Query and Tools Section */}
             <div className="grid grid-cols-12 gap-6 mt-6">
               <div className="col-span-12 md:col-span-7">
                 <Card className="bg-slate-800/50 border-purple-500/20 overflow-hidden">
@@ -164,7 +179,7 @@ const Dashboard = () => {
             {/* Tabs Navigation */}
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-6">
               <div className="flex justify-center mb-6">
-                <TabsList className="grid w-full max-w-md grid-cols-3 bg-slate-800/50 p-1">
+                <TabsList className="grid w-full max-w-2xl grid-cols-5 bg-slate-800/50 p-1">
                   <TabsTrigger 
                     value="data" 
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
@@ -181,6 +196,24 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2">
                       <ChartBar className="h-4 w-4" /> 
                       <span>Visualize</span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="compare"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+                  >
+                    <div className="flex items-center gap-2">
+                      <GitCompare className="h-4 w-4" /> 
+                      <span>Compare</span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="goals"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4" /> 
+                      <span>Goals</span>
                     </div>
                   </TabsTrigger>
                   <TabsTrigger 
@@ -216,15 +249,23 @@ const Dashboard = () => {
                 </Card>
               </TabsContent>
               
+              <TabsContent value="compare" className="mt-0">
+                <DatasetComparison />
+              </TabsContent>
+              
+              <TabsContent value="goals" className="mt-0">
+                <GoalTracker />
+              </TabsContent>
+              
               <TabsContent value="insights" className="mt-0">
                 <Card className="bg-slate-800/50 border-cyan-500/20">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                       <MessageSquare className="text-cyan-400" />
-                      AI Insights
+                      Advanced Insights
                     </h3>
                     <p className="mb-6 text-slate-300">
-                      Discover hidden patterns and valuable insights in your data through advanced AI analysis.
+                      Discover hidden patterns and valuable insights in your data through advanced analysis.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       <Card className="bg-slate-800/80 border-purple-500/10 p-4">
@@ -261,7 +302,7 @@ const Dashboard = () => {
                         onClick={() => setActiveTab('visualize')}
                         className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 px-6"
                       >
-                        Generate AI-Powered Visualizations
+                        Generate Smart Visualizations
                       </Button>
                       <Button 
                         variant="outline"
