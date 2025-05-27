@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Info, CheckCircle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { generateSmartInsights, AnalysisResult } from '@/services/analysisService';
 
@@ -52,15 +52,17 @@ const SmartInsights = () => {
           insights.map((insight, index) => (
             <Alert key={index} className="border-l-4 border-l-purple-500">
               <div className="flex items-start gap-3">
-                {getIcon(insight.type)}
-                <div className="flex-1">
+                <div className="flex-shrink-0">
+                  {getIcon(insight.type)}
+                </div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium">{insight.title}</h4>
-                    <Badge variant={getSeverityColor(insight.severity) as any}>
+                    <h4 className="font-medium text-sm">{insight.title}</h4>
+                    <Badge variant={getSeverityColor(insight.severity) as any} className="text-xs">
                       {insight.severity}
                     </Badge>
                   </div>
-                  <AlertDescription>{insight.message}</AlertDescription>
+                  <AlertDescription className="text-sm">{insight.message}</AlertDescription>
                 </div>
               </div>
             </Alert>
