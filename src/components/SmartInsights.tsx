@@ -51,19 +51,15 @@ const SmartInsights = () => {
         ) : (
           insights.map((insight, index) => (
             <Alert key={index} className="border-l-4 border-l-purple-500">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  {getIcon(insight.type)}
+              {getIcon(insight.type)}
+              <div className="ml-2 flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-medium text-sm">{insight.title}</h4>
+                  <Badge variant={getSeverityColor(insight.severity) as any} className="text-xs">
+                    {insight.severity}
+                  </Badge>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-sm">{insight.title}</h4>
-                    <Badge variant={getSeverityColor(insight.severity) as any} className="text-xs">
-                      {insight.severity}
-                    </Badge>
-                  </div>
-                  <AlertDescription className="text-sm">{insight.message}</AlertDescription>
-                </div>
+                <AlertDescription className="text-sm">{insight.message}</AlertDescription>
               </div>
             </Alert>
           ))
