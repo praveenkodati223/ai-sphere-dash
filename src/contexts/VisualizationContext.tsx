@@ -117,6 +117,8 @@ interface VisualizationContextType {
   region: string | null;
   setRegion: (region: string | null) => void;
   exportData: () => void;
+  filteredData: any[] | null;
+  setFilteredData: (data: any[]) => void;
 }
 
 export const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -130,6 +132,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [analyzedData, setAnalyzedData] = useState<AnalyzedDataType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [customChartConfig, setCustomChartConfig] = useState<ChartConfig | null>(null);
+  const [filteredData, setFilteredData] = useState<any[] | null>(null);
   
   const [dateRange, setDateRange] = useState<number[]>([30, 90]);
   const [showOutliers, setShowOutliers] = useState<boolean>(true);
@@ -426,7 +429,9 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setCategory,
     region,
     setRegion,
-    exportData
+    exportData,
+    filteredData,
+    setFilteredData
   };
 
   return (
@@ -443,3 +448,5 @@ export const useVisualization = () => {
   }
   return context;
 };
+
+export default VisualizationProvider;

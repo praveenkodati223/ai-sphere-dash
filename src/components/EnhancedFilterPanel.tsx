@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -288,7 +287,6 @@ const EnhancedFilterPanel = () => {
                         <div className="flex items-center gap-2">
                           <Checkbox
                             checked={selectedValues.includes(value)}
-                            readOnly
                           />
                           {value}
                         </div>
@@ -381,3 +379,5 @@ const EnhancedFilterPanel = () => {
 };
 
 export default EnhancedFilterPanel;
+
+</edits_to_apply>
