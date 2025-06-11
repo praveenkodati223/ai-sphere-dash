@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
 
@@ -140,6 +140,15 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [maxValue, setMaxValue] = useState<number>(1000);
   const [category, setCategory] = useState<string | null>(null);
   const [region, setRegion] = useState<string | null>(null);
+  
+  // Reset filtered data when active dataset changes
+  useEffect(() => {
+    if (activeDataset) {
+      setFilteredData(activeDataset.data);
+    } else {
+      setFilteredData(null);
+    }
+  }, [activeDataset]);
   
   const availableCategories = React.useMemo(() => {
     if (!activeDataset) return [];
@@ -320,8 +329,18 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
       data: data
     };
     
-    setDatasets([newDataset]);
-    setActiveDataset(newDataset);
+    // Add to existing datasets instead of replacing
+    setDatasets(prev => {
+      const existing = prev.find(d => d.id === datasetId);
+      if (existing) return prev;
+      return [...prev, newDataset];
+    });
+    
+    // Only set as active if no active dataset exists
+    if (!activeDataset) {
+      setActiveDataset(newDataset);
+    }
+    
     toast.success(`Imported ${name}`);
   };
   
