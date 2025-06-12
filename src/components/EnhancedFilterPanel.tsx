@@ -7,29 +7,33 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Filter, RotateCcw, Download } from 'lucide-react';
+import { Filter, RotateCcw, Download, Share2 } from 'lucide-react';
 import { useVisualization } from '@/contexts/VisualizationContext';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const EnhancedFilterPanel = () => {
   const { 
     activeDataset, 
     setFilteredData,
-    availableCategories, 
-    availableRegions,
     exportData
   } = useVisualization();
   
-  const [dateRange, setDateRange] = useState<Date[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedColumns, setSelectedColumns] = useState<{[key: string]: string[]}>({});
   const [valueRange, setValueRange] = useState<number[]>([0, 1000]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Get all unique values for each column
+  const getColumnValues = (columnName: string) => {
+    if (!activeDataset) return [];
+    return Array.from(new Set(
+      activeDataset.data
+        .map(item => item[columnName])
+        .filter(value => value !== null && value !== undefined && value !== '')
+        .map(value => String(value))
+    )).sort();
+  };
 
   // Apply filters whenever filter values change
   useEffect(() => {
@@ -46,23 +50,17 @@ const EnhancedFilterPanel = () => {
       );
     }
     
-    // Apply category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(item => {
-        const category = item.category || item.Category || item.CATEGORY;
-        return selectedCategories.includes(category);
-      });
-    }
+    // Apply column-based filters
+    Object.entries(selectedColumns).forEach(([column, selectedValues]) => {
+      if (selectedValues.length > 0) {
+        filtered = filtered.filter(item => {
+          const itemValue = String(item[column] || '');
+          return selectedValues.includes(itemValue);
+        });
+      }
+    });
     
-    // Apply region filter
-    if (selectedRegions.length > 0) {
-      filtered = filtered.filter(item => {
-        const region = item.region || item.Region || item.REGION;
-        return selectedRegions.includes(region);
-      });
-    }
-    
-    // Apply value range filter
+    // Apply value range filter for numeric columns
     filtered = filtered.filter(item => {
       const numericValues = Object.values(item).filter(val => typeof val === 'number');
       if (numericValues.length === 0) return true;
@@ -93,20 +91,56 @@ const EnhancedFilterPanel = () => {
     
     setFilteredData(filtered);
     toast.success(`Applied filters: ${filtered.length} rows shown`);
-  }, [activeDataset, searchTerm, selectedCategories, selectedRegions, valueRange, sortBy, sortOrder, setFilteredData]);
+  }, [activeDataset, searchTerm, selectedColumns, valueRange, sortBy, sortOrder, setFilteredData]);
 
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedCategories([]);
-    setSelectedRegions([]);
+    setSelectedColumns({});
     setValueRange([0, 1000]);
     setSortBy('');
     setSortOrder('asc');
-    setDateRange([]);
     if (activeDataset) {
       setFilteredData(activeDataset.data);
     }
     toast.info('All filters reset');
+  };
+
+  const handleColumnValueSelect = (column: string, value: string, checked: boolean) => {
+    setSelectedColumns(prev => {
+      const currentValues = prev[column] || [];
+      if (checked) {
+        return { ...prev, [column]: [...currentValues, value] };
+      } else {
+        return { ...prev, [column]: currentValues.filter(v => v !== value) };
+      }
+    });
+  };
+
+  const shareData = async () => {
+    if (!activeDataset) {
+      toast.error("No data to share");
+      return;
+    }
+    
+    try {
+      const shareData = {
+        title: `${activeDataset.name} - Sphere AI Visualization`,
+        text: `Check out this data visualization: ${activeDataset.description}`,
+        url: window.location.href
+      };
+      
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success("Data shared successfully");
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        toast.success("Share link copied to clipboard");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast.error("Failed to share data");
+    }
   };
 
   if (!activeDataset) {
@@ -141,53 +175,37 @@ const EnhancedFilterPanel = () => {
           />
         </div>
 
-        {/* Category Filter */}
-        {availableCategories.length > 0 && (
-          <div className="space-y-2">
-            <Label>Categories ({selectedCategories.length} selected)</Label>
-            <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-600 rounded p-2">
-              {availableCategories.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={selectedCategories.includes(category)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedCategories([...selectedCategories, category]);
-                      } else {
-                        setSelectedCategories(selectedCategories.filter(c => c !== category));
+        {/* Dynamic Column Filters */}
+        {columnNames.map((column) => {
+          const columnValues = getColumnValues(column);
+          const selectedValues = selectedColumns[column] || [];
+          
+          if (columnValues.length === 0) return null;
+          
+          return (
+            <div key={column} className="space-y-2">
+              <Label>{column} ({selectedValues.length} selected)</Label>
+              <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-600 rounded p-2">
+                {columnValues.slice(0, 20).map((value) => (
+                  <div key={value} className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={selectedValues.includes(value)}
+                      onCheckedChange={(checked) => 
+                        handleColumnValueSelect(column, value, !!checked)
                       }
-                    }}
-                  />
-                  <Label className="text-sm">{category}</Label>
-                </div>
-              ))}
+                    />
+                    <Label className="text-sm">{value}</Label>
+                  </div>
+                ))}
+                {columnValues.length > 20 && (
+                  <p className="text-xs text-slate-400">
+                    Showing first 20 of {columnValues.length} values
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Region Filter */}
-        {availableRegions.length > 0 && (
-          <div className="space-y-2">
-            <Label>Regions ({selectedRegions.length} selected)</Label>
-            <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-600 rounded p-2">
-              {availableRegions.map((region) => (
-                <div key={region} className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={selectedRegions.includes(region)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedRegions([...selectedRegions, region]);
-                      } else {
-                        setSelectedRegions(selectedRegions.filter(r => r !== region));
-                      }
-                    }}
-                  />
-                  <Label className="text-sm">{region}</Label>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })}
 
         {/* Value Range Filter */}
         <div className="space-y-2">
@@ -195,9 +213,9 @@ const EnhancedFilterPanel = () => {
           <Slider
             value={valueRange}
             onValueChange={setValueRange}
-            max={1000}
+            max={10000}
             min={0}
-            step={10}
+            step={100}
             className="w-full"
           />
         </div>
@@ -250,6 +268,14 @@ const EnhancedFilterPanel = () => {
           >
             <Download className="h-4 w-4 mr-2" />
             Export
+          </Button>
+          <Button
+            onClick={shareData}
+            variant="outline"
+            className="flex-1 border-purple-500/30 hover:border-purple-500 hover:bg-purple-500/10"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
           </Button>
         </div>
       </CardContent>

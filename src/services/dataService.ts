@@ -96,10 +96,9 @@ export const generateSampleData = (): DataPoint[] => {
   });
 };
 
-// Define sample data exports
+// Define sample data exports - removed inventory
 export const sampleSalesData = generateSampleData();
 export const sampleWebAnalyticsData = generatePatternedData('growing');
-export const sampleInventoryData = generatePatternedData('seasonal');
 export const sampleFinancialData = generatePatternedData('anomalies');
 
 // Generate custom data based on a seed (filename or other identifier)
@@ -179,7 +178,7 @@ export const generateTreemapData = () => {
   });
 };
 
-// Sample datasets
+// Sample datasets - removed inventory
 export const sampleDatasets: DataSet[] = [
   {
     id: 'sales-data',
@@ -212,21 +211,6 @@ export const sampleDatasets: DataSet[] = [
     }
   },
   {
-    id: 'inventory',
-    name: 'Inventory Levels',
-    description: 'Current inventory levels across categories',
-    data: generateSampleData(),
-    lastUpdated: new Date(),
-    analysis: {
-      trend: 'Stable',
-      insights: [
-        'Clothing inventory levels are optimal',
-        'Electronics stock requires attention due to supply chain issues',
-        'Sports equipment showing higher than needed levels'
-      ]
-    }
-  },
-  {
     id: 'financial',
     name: 'Financial Data',
     description: 'Revenue and expense data with quarterly breakdown',
@@ -238,36 +222,6 @@ export const sampleDatasets: DataSet[] = [
         'Revenue increased by 12% year over year',
         'Cost reduction measures showing positive results',
         'Q3 showed strongest performance across all categories'
-      ]
-    }
-  },
-  {
-    id: 'imported-data',
-    name: 'Imported Dataset',
-    description: 'User imported dataset',
-    data: generateSampleData(),
-    lastUpdated: new Date(),
-    analysis: {
-      trend: 'Mixed',
-      insights: [
-        'Dataset requires detailed analysis',
-        'Multiple patterns detected across categories',
-        'Consider filtering by region for more insights'
-      ]
-    }
-  },
-  {
-    id: 'api-data',
-    name: 'API Data',
-    description: 'Data imported from external API',
-    data: generateSampleData(),
-    lastUpdated: new Date(),
-    analysis: {
-      trend: 'Variable',
-      insights: [
-        'External data shows interesting patterns',
-        'Consider refreshing regularly for latest trends',
-        'Multiple anomalies detected worth investigating'
       ]
     }
   }

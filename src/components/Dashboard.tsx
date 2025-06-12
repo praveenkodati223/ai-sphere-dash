@@ -22,10 +22,10 @@ const Dashboard = () => {
         {/* Single column layout - everything centered */}
         <div className="space-y-6">
           <DataImport />
-          <AIAssistant />
           <EnhancedFilterPanel />
           <Visualizations />
           <DatasetComparison />
+          <AIAssistant />
         </div>
       </div>
     </div>

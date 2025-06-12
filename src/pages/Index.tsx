@@ -2,10 +2,8 @@
 import React from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
-import Dashboard from '../components/Dashboard';
 import { useNavigate } from 'react-router-dom';
 import { useVisualization } from '@/contexts/VisualizationContext';
-import { toast } from "sonner";
 
 const Index = () => {
   const { activeDataset, exportData } = useVisualization();
@@ -15,7 +13,6 @@ const Index = () => {
     <div className="min-h-screen bg-sphere-dark">
       <Header />
       <Hero />
-      <Dashboard />
       
       <footer className="py-10 border-t border-white/10">
         <div className="container mx-auto px-4 text-center">

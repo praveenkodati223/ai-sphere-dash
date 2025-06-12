@@ -1,6 +1,7 @@
+
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
-import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
+import { sampleSalesData, sampleWebAnalyticsData, sampleFinancialData } from '@/services/dataService';
 
 export type ChartTypes = 
   'bar' | 
@@ -122,6 +123,11 @@ interface VisualizationContextType {
   selectedRows: number[];
   setSelectedRows: (rows: number[]) => void;
   visualizationData: any[] | null;
+  comparisonDatasets: DatasetType[];
+  addComparisonDataset: (dataset: DatasetType) => void;
+  removeComparisonDataset: (id: string) => void;
+  clearComparisonDatasets: () => void;
+  importComparisonData: (name: string, description: string, data?: any[]) => void;
 }
 
 export const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -137,6 +143,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [customChartConfig, setCustomChartConfig] = useState<ChartConfig | null>(null);
   const [filteredData, setFilteredData] = useState<any[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [comparisonDatasets, setComparisonDatasets] = useState<DatasetType[]>([]);
   
   const [dateRange, setDateRange] = useState<number[]>([30, 90]);
   const [showOutliers, setShowOutliers] = useState<boolean>(true);
@@ -336,11 +343,6 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         name = 'Sample Web Analytics';
         description = 'Visitor traffic, sources, and conversion rates';
         break;
-      case 'inventory':
-        data = sampleInventoryData;
-        name = 'Sample Inventory Data';
-        description = 'Stock levels across categories and locations';
-        break;
       case 'financial':
         data = sampleFinancialData;
         name = 'Sample Financial Data';
@@ -376,6 +378,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setActiveDataset(null);
     setAnalyzedData(null);
     setCustomChartConfig(null);
+    setComparisonDatasets([]);
     toast.info("All datasets cleared");
   };
   
@@ -402,6 +405,47 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     toast.success(`Dataset "${name}" is now active`);
   };
 
+  // Comparison dataset functions
+  const addComparisonDataset = (dataset: DatasetType) => {
+    setComparisonDatasets(prev => {
+      const existing = prev.find(d => d.id === dataset.id);
+      if (existing) return prev;
+      return [...prev, dataset];
+    });
+    toast.success(`Added ${dataset.name} for comparison`);
+  };
+
+  const removeComparisonDataset = (id: string) => {
+    setComparisonDatasets(prev => prev.filter(d => d.id !== id));
+    toast.info("Dataset removed from comparison");
+  };
+
+  const clearComparisonDatasets = () => {
+    setComparisonDatasets([]);
+    toast.info("Comparison datasets cleared");
+  };
+
+  const importComparisonData = (name: string, description: string, data?: any[]) => {
+    const id = `comparison-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    
+    const generatedData = data || Array.from({ length: 10 }, (_, i) => ({
+      category: `Category ${i + 1}`,
+      q1: Math.floor(Math.random() * 1000),
+      q2: Math.floor(Math.random() * 1000),
+      q3: Math.floor(Math.random() * 1000),
+      q4: Math.floor(Math.random() * 1000)
+    }));
+    
+    const newDataset = {
+      id: id,
+      name: name,
+      description: description,
+      data: generatedData
+    };
+    
+    addComparisonDataset(newDataset);
+  };
+
   const exportData = () => {
     if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) {
       toast.error("No data available to export");
@@ -409,14 +453,37 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Convert the data to CSV format
-      const columns = Object.keys(activeDataset.data[0] || {});
+      // Prepare comprehensive export data
+      const exportPackage = {
+        dataset: {
+          name: activeDataset.name,
+          description: activeDataset.description,
+          data: visualizationData || activeDataset.data,
+          rowCount: (visualizationData || activeDataset.data).length,
+          exportDate: new Date().toISOString()
+        },
+        analysis: analyzedData || null,
+        visualization: {
+          chartType: selectedChart,
+          customConfig: customChartConfig
+        },
+        filters: {
+          selectedRows: selectedRows.length > 0 ? selectedRows : null,
+          hasFilters: filteredData !== null
+        }
+      };
+      
+      // Convert to JSON for comprehensive export
+      const jsonContent = JSON.stringify(exportPackage, null, 2);
+      
+      // Also create CSV for data
+      const csvData = visualizationData || activeDataset.data;
+      const columns = Object.keys(csvData[0] || {});
       const csvContent = [
-        columns.join(','), // Header row
-        ...activeDataset.data.map(row => 
+        columns.join(','),
+        ...csvData.map(row => 
           columns.map(col => {
             const value = row[col];
-            // Handle values that might contain commas
             return typeof value === 'string' && value.includes(',') 
               ? `"${value}"` 
               : value;
@@ -424,20 +491,33 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         )
       ].join('\n');
       
-      // Create a Blob containing the CSV data
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Create and download JSON export
+      const jsonBlob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+      const jsonLink = document.createElement('a');
+      const jsonUrl = URL.createObjectURL(jsonBlob);
       
-      // Create a download link and trigger the download
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
+      jsonLink.setAttribute('href', jsonUrl);
+      jsonLink.setAttribute('download', `${activeDataset.name.toLowerCase().replace(/\s+/g, '-')}_complete_export.json`);
+      jsonLink.style.visibility = 'hidden';
       
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${activeDataset.name.toLowerCase().replace(/\s+/g, '-')}_export.csv`);
-      link.style.visibility = 'hidden';
+      document.body.appendChild(jsonLink);
+      jsonLink.click();
+      document.body.removeChild(jsonLink);
       
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Create and download CSV export
+      const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csvLink = document.createElement('a');
+      const csvUrl = URL.createObjectURL(csvBlob);
+      
+      csvLink.setAttribute('href', csvUrl);
+      csvLink.setAttribute('download', `${activeDataset.name.toLowerCase().replace(/\s+/g, '-')}_data.csv`);
+      csvLink.style.visibility = 'hidden';
+      
+      document.body.appendChild(csvLink);
+      csvLink.click();
+      document.body.removeChild(csvLink);
+      
+      toast.success("Complete data package exported (JSON + CSV)");
     } catch (error) {
       console.error("Error exporting data:", error);
       toast.error("Failed to export data");
@@ -480,7 +560,12 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setFilteredData,
     selectedRows,
     setSelectedRows,
-    visualizationData
+    visualizationData,
+    comparisonDatasets,
+    addComparisonDataset,
+    removeComparisonDataset,
+    clearComparisonDatasets,
+    importComparisonData
   };
 
   return (
