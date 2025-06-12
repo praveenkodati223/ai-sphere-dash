@@ -4,6 +4,7 @@ import DataImport from './DataImport';
 import QueryInput from './QueryInput';
 import Visualizations from './Visualizations';
 import DatasetComparison from './DatasetComparison';
+import MLDataComparison from './MLDataComparison';
 import EnhancedFilterPanel from './EnhancedFilterPanel';
 import AIAssistant from './AIAssistant';
 
@@ -25,6 +26,7 @@ const Dashboard = () => {
           <EnhancedFilterPanel />
           <Visualizations />
           <DatasetComparison />
+          <MLDataComparison />
           <AIAssistant />
         </div>
       </div>
