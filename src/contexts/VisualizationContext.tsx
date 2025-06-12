@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
@@ -169,7 +168,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     ))).filter(Boolean) as string[];
   }, [activeDataset]);
 
-  // Define visualizationData as a memoized value - this must come before analyzeData
+  // Define visualizationData as a memoized value
   const visualizationData = React.useMemo(() => {
     if (!activeDataset) return null;
     
@@ -187,7 +186,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     const dataToAnalyze = visualizationData || activeDataset?.data;
     
     if (!dataToAnalyze || dataToAnalyze.length === 0) {
-      toast.error("No data available for analysis");
+      toast.error("No data available for analysis. Please import a dataset first.");
       return;
     }
     
@@ -366,10 +365,8 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
       return [...prev, newDataset];
     });
     
-    // Only set as active if no active dataset exists
-    if (!activeDataset) {
-      setActiveDataset(newDataset);
-    }
+    // Set as active dataset
+    setActiveDataset(newDataset);
     
     toast.success(`Imported ${name}`);
   };

@@ -10,7 +10,6 @@ import Analytics from "./pages/Analytics";
 import Documentation from "./pages/Documentation";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./components/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +22,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/app" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/docs" element={<Documentation />} />
             <Route path="/pricing" element={<Pricing />} />

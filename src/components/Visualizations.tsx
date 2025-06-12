@@ -242,9 +242,21 @@ const Visualizations = () => {
       <Tabs value={currentView} className="w-full">
         <TabsContent value="chart" className="mt-0 p-0">
           <div className="p-4 h-[350px] flex items-center justify-center">
-            {!analyzedData && !isAnalyzing ? (
+            {!activeDataset ? (
               <div className="text-center">
-                <p className="text-lg mb-4">Select visualization options and click start</p>
+                <p className="text-lg mb-4">No data imported yet</p>
+                <p className="text-sm text-slate-400 mb-4">Please import a dataset to start visualization</p>
+                <Button 
+                  variant="outline"
+                  className="border-cyan-500/50 hover:border-cyan-500 hover:bg-cyan-500/10"
+                  onClick={() => toast.info("Use the Data Import section above to add your data")}
+                >
+                  Import Data First
+                </Button>
+              </div>
+            ) : !analyzedData && !isAnalyzing ? (
+              <div className="text-center">
+                <p className="text-lg mb-4">Ready to visualize your data</p>
                 <Button 
                   className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex items-center gap-2"
                   onClick={handleStartVisualization}
@@ -261,13 +273,27 @@ const Visualizations = () => {
         
         <TabsContent value="data" className="mt-0 p-0">
           <div className="p-4">
-            <EnhancedDataPreview />
+            {!activeDataset ? (
+              <div className="text-center py-12">
+                <p className="text-lg mb-4">No data available</p>
+                <p className="text-sm text-slate-400">Import a dataset to view and preview your data</p>
+              </div>
+            ) : (
+              <EnhancedDataPreview />
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="insights" className="mt-0 p-0">
           <div className="h-[350px] overflow-auto p-4">
-            {isAnalyzing ? (
+            {!activeDataset ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-lg mb-2">No data to analyze</div>
+                  <p className="text-sm text-slate-400">Import a dataset first to generate insights</p>
+                </div>
+              </div>
+            ) : isAnalyzing ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
