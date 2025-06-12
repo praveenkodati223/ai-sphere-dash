@@ -119,6 +119,9 @@ interface VisualizationContextType {
   exportData: () => void;
   filteredData: any[] | null;
   setFilteredData: (data: any[]) => void;
+  selectedRows: number[];
+  setSelectedRows: (rows: number[]) => void;
+  visualizationData: any[] | null;
 }
 
 export const VisualizationContext = createContext<VisualizationContextType | undefined>(undefined);
@@ -133,6 +136,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [customChartConfig, setCustomChartConfig] = useState<ChartConfig | null>(null);
   const [filteredData, setFilteredData] = useState<any[] | null>(null);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
   const [dateRange, setDateRange] = useState<number[]>([30, 90]);
   const [showOutliers, setShowOutliers] = useState<boolean>(true);
@@ -165,8 +169,10 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
   }, [activeDataset]);
   
   const analyzeData = useCallback(() => {
-    if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) {
-      toast.error("No dataset available for analysis");
+    const dataToAnalyze = visualizationData || activeDataset?.data;
+    
+    if (!dataToAnalyze || dataToAnalyze.length === 0) {
+      toast.error("No data available for analysis");
       return;
     }
     
@@ -174,7 +180,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     
     setTimeout(() => {
       try {
-        const data = activeDataset.data;
+        const data = dataToAnalyze;
         
         const extractNumericValues = (item: any): number[] => {
           const numericValues: number[] = [];
@@ -194,19 +200,25 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         
         const total = allNumericValues.reduce((sum, val) => sum + val, 0);
         const average = total / allNumericValues.length || 0;
-        const max = Math.max(...allNumericValues, 0); // Prevent -Infinity
-        const min = Math.min(...allNumericValues, 0); // Prevent Infinity
+        const max = Math.max(...allNumericValues, 0);
+        const min = Math.min(...allNumericValues, 0);
         
-        const dataSubject = activeDataset.name
-          .replace(/sample/i, '')
-          .replace(/data/i, '')
-          .trim() || 'dataset';
+        const dataSubject = activeDataset?.name
+          ?.replace(/sample/i, '')
+          ?.replace(/data/i, '')
+          ?.trim() || 'dataset';
+        
+        const rowInfo = selectedRows.length > 0 
+          ? ` (${selectedRows.length} selected rows)` 
+          : ` (${data.length} total rows)`;
         
         const insights = [
-          `${dataSubject} shows a total value of ${total.toLocaleString()} across ${data.length} records.`,
-          `Average value is ${average.toFixed(2)}, with a range from ${min.toLocaleString()} to ${max.toLocaleString()}.`,
-          `This dataset contains ${Object.keys(data[0] || {}).length} different attributes to analyze.`,
-          `Key patterns show ${data.length > 10 ? 'significant variation' : 'consistent values'} across the records.`
+          `${dataSubject}${rowInfo} shows a total value of ${total.toLocaleString()}.`,
+          `Average value is ${average.toFixed(2)}, ranging from ${min.toLocaleString()} to ${max.toLocaleString()}.`,
+          `Dataset contains ${Object.keys(data[0] || {}).length} attributes for analysis.`,
+          selectedRows.length > 0 
+            ? `Analysis focused on ${selectedRows.length} specifically selected data points.`
+            : `Comprehensive analysis across ${data.length} data points shows ${data.length > 10 ? 'significant variation' : 'consistent patterns'}.`
         ];
         
         const categoryKey = Object.keys(data[0] || {}).find(key => 
@@ -236,10 +248,10 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
             percentage: Math.round((value / total) * 100) || 0
           }))
           .sort((a, b) => b.value - a.value)
-          .slice(0, 5); // Top 5 categories
-        
+          .slice(0, 5);
+
         const trendData = {
-          growthRate: Math.round(Math.random() * 20 - 5), // -5% to 15%
+          growthRate: Math.round(Math.random() * 20 - 5),
           seasonality: ['Winter', 'Spring', 'Summer', 'Fall'][Math.floor(Math.random() * 4)],
           forecast: Math.random() > 0.7 ? 'Negative' : 'Positive'
         };
@@ -270,7 +282,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         };
         
         const analyzed: AnalyzedDataType = {
-          summary: `Analysis of ${activeDataset.name} - ${dataSubject} data with ${data.length} records`,
+          summary: `Analysis of ${activeDataset?.name} - ${dataSubject} data${rowInfo}`,
           metrics: { total, average, max, min },
           insights,
           breakdown,
@@ -281,7 +293,10 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         };
         
         setAnalyzedData(analyzed);
-        toast.success("Data analysis complete!");
+        toast.success(selectedRows.length > 0 
+          ? `Analysis complete for ${selectedRows.length} selected rows!`
+          : "Data analysis complete!"
+        );
       } catch (error) {
         console.error("Error analyzing data:", error);
         toast.error("Error analyzing data. Please try again.");
@@ -289,7 +304,7 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
         setIsAnalyzing(false);
       }
     }, 1500);
-  }, [activeDataset]);
+  }, [activeDataset, visualizationData, selectedRows]);
   
   const importSampleData = (datasetId: string) => {
     let data;
@@ -417,6 +432,19 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
+  const visualizationData = React.useMemo(() => {
+    if (!activeDataset) return null;
+    
+    let dataToUse = filteredData || activeDataset.data;
+    
+    // If specific rows are selected, use only those rows
+    if (selectedRows.length > 0) {
+      dataToUse = selectedRows.map(index => dataToUse[index]).filter(Boolean);
+    }
+    
+    return dataToUse;
+  }, [activeDataset, filteredData, selectedRows]);
+
   const value = {
     datasets,
     activeDataset,
@@ -450,7 +478,10 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
     setRegion,
     exportData,
     filteredData,
-    setFilteredData
+    setFilteredData,
+    selectedRows,
+    setSelectedRows,
+    visualizationData
   };
 
   return (

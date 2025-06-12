@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +34,7 @@ import ChartComponent from "./ChartComponent";
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { toast } from "sonner";
 import { sampleCategories } from '@/services/dataService';
+import EnhancedDataPreview from './EnhancedDataPreview';
 
 const safeFormatNumber = (value: any): string => {
   if (value === undefined || value === null || isNaN(Number(value))) {
@@ -260,52 +260,8 @@ const Visualizations = () => {
         </TabsContent>
         
         <TabsContent value="data" className="mt-0 p-0">
-          <div className="h-[350px] overflow-auto px-4">
-            {!activeDataset ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="text-lg mb-2">No data available</div>
-                  <p className="text-sm text-slate-400 mb-4">Import a dataset to view data</p>
-                </div>
-              </div>
-            ) : !analyzedData && !isAnalyzing ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="text-lg mb-2">Data ready for visualization</div>
-                  <p className="text-sm text-slate-400 mb-4">Click Start Visualization to analyze and display your data</p>
-                  <Button 
-                    className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 flex items-center gap-2"
-                    onClick={handleStartVisualization}
-                  >
-                    <PlayIcon className="h-4 w-4" />
-                    Start Visualization
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    {activeDataset && activeDataset.data.length > 0 && Object.keys(activeDataset.data[0] || {}).map((column, index) => (
-                      <th key={index} className="text-left p-2">{column}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeDataset?.data.map((item, idx) => (
-                    <tr key={idx} className="border-b border-white/5">
-                      {Object.entries(item || {}).map(([key, value], colIdx) => (
-                        <td key={`${idx}-${colIdx}`} className="p-2">
-                          {value !== undefined && value !== null ? 
-                            (typeof value === 'number' ? safeFormatNumber(value) : String(value)) : 
-                            ''}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <div className="p-4">
+            <EnhancedDataPreview />
           </div>
         </TabsContent>
         
