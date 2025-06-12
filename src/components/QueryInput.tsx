@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +26,22 @@ const QueryInput = () => {
   const [apiKeyConfigured, setApiKeyConfigured] = useState<boolean>(false);
   const [showSetupSuccess, setShowSetupSuccess] = useState<boolean>(false);
   
+  // Add error boundary for context
+  let visualizationContext;
+  try {
+    visualizationContext = useVisualization();
+  } catch (error) {
+    console.error("QueryInput: VisualizationContext not available:", error);
+    return null; // Don't render if context is not available
+  }
+  
   const { 
     activeDataset, 
     setSelectedChart,
     setCurrentView, 
     analyzeData,
     setCustomChartConfig
-  } = useVisualization();
+  } = visualizationContext;
   
   // Check if OpenAI API key is configured
   useEffect(() => {
