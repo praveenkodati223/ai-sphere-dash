@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { sampleSalesData, sampleWebAnalyticsData, sampleInventoryData, sampleFinancialData } from '@/services/dataService';
@@ -167,6 +168,20 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
       item.region || item.Region || item.REGION || null
     ))).filter(Boolean) as string[];
   }, [activeDataset]);
+
+  // Define visualizationData as a memoized value - this must come before analyzeData
+  const visualizationData = React.useMemo(() => {
+    if (!activeDataset) return null;
+    
+    let dataToUse = filteredData || activeDataset.data;
+    
+    // If specific rows are selected, use only those rows
+    if (selectedRows.length > 0) {
+      dataToUse = selectedRows.map(index => dataToUse[index]).filter(Boolean);
+    }
+    
+    return dataToUse;
+  }, [activeDataset, filteredData, selectedRows]);
   
   const analyzeData = useCallback(() => {
     const dataToAnalyze = visualizationData || activeDataset?.data;
@@ -431,19 +446,6 @@ export const VisualizationProvider = ({ children }: { children: React.ReactNode 
       toast.error("Failed to export data");
     }
   };
-
-  const visualizationData = React.useMemo(() => {
-    if (!activeDataset) return null;
-    
-    let dataToUse = filteredData || activeDataset.data;
-    
-    // If specific rows are selected, use only those rows
-    if (selectedRows.length > 0) {
-      dataToUse = selectedRows.map(index => dataToUse[index]).filter(Boolean);
-    }
-    
-    return dataToUse;
-  }, [activeDataset, filteredData, selectedRows]);
 
   const value = {
     datasets,

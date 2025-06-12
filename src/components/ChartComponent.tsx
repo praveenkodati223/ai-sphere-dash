@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { useVisualization } from '@/contexts/VisualizationContext';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, ScatterChart, Scatter, 
   AreaChart, Area, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  TreemapChart, Treemap, FunnelChart, Funnel, ComposedChart
+  Treemap, FunnelChart, Funnel, ComposedChart
 } from 'recharts';
 import { CHART_COLORS } from '@/services/dataService';
 
@@ -45,9 +46,9 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
   } = useVisualization();
   
   // Use visualizationData (which includes row selection) instead of activeDataset.data
-  const chartData = visualizationData || activeDataset?.data || [];
+  const data = visualizationData || activeDataset?.data || [];
   
-  if (!activeDataset || chartData.length === 0) {
+  if (!activeDataset || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-300">
         <div className="text-lg mb-2">No data available for visualization</div>
@@ -68,19 +69,19 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
   
   // Ensure data is formatted properly for charting
   const prepareData = () => {
-    if (!activeDataset || !activeDataset.data || activeDataset.data.length === 0) return [];
+    if (!data || data.length === 0) return [];
     
     // Return a clean copy of the data to avoid reference issues
-    return activeDataset.data.map(item => ({...item}));
+    return data.map(item => ({...item}));
   };
   
-  const chartData = prepareData();
+  const preparedData = prepareData();
   
   // Check for data format and choose appropriate keys
   const getAvailableKeys = () => {
-    if (!chartData || chartData.length === 0) return { categories: [], metrics: [] };
+    if (!preparedData || preparedData.length === 0) return { categories: [], metrics: [] };
     
-    const firstItem = chartData[0];
+    const firstItem = preparedData[0];
     const categories: string[] = [];
     const metrics: string[] = [];
     
@@ -108,23 +109,23 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
   ) || categories[0] || 'category';
   
   // If data has no metrics, try to make it work with what we have
-  if (metrics.length === 0 && chartData.length > 0) {
+  if (metrics.length === 0 && preparedData.length > 0) {
     console.log('No numeric metrics found. Creating artificial metrics.');
     // Add index as a numeric metric for visualization
-    chartData.forEach((item, index) => {
+    preparedData.forEach((item, index) => {
       item.value = index + 1;
     });
   }
 
   // Use customChartConfig if available
-  if (customChartConfig && chartData.length > 0) {
+  if (customChartConfig && preparedData.length > 0) {
     try {
       // Get appropriate chart based on customChartConfig.chartType
       switch (customChartConfig.chartType.toLowerCase()) {
         case 'line':
           return (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={preparedData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                 <XAxis 
                   dataKey={customChartConfig.xAxis.dataKey} 
@@ -156,7 +157,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
         case 'bar':
           return (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={preparedData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                 <XAxis 
                   dataKey={customChartConfig.xAxis.dataKey} 
@@ -188,7 +189,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={chartData}
+                  data={preparedData}
                   dataKey={customChartConfig.series[0].dataKey}
                   nameKey={customChartConfig.xAxis.dataKey}
                   cx="50%"
@@ -196,7 +197,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
                   outerRadius={100}
                   label={(entry) => entry.name || entry[customChartConfig.xAxis.dataKey] || ''}
                 >
-                  {chartData.map((entry, index) => (
+                  {preparedData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={CHART_COLORS[index % CHART_COLORS.length]} 
@@ -212,7 +213,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
         case 'area':
           return (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={preparedData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                 <XAxis 
                   dataKey={customChartConfig.xAxis.dataKey} 
@@ -263,7 +264,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
                   <Scatter
                     key={index}
                     name={series.name}
-                    data={chartData}
+                    data={preparedData}
                     fill={series.color || CHART_COLORS[index % CHART_COLORS.length]}
                   />
                 ))}
@@ -271,157 +272,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
             </ResponsiveContainer>
           );
           
-        case 'clusteredBar':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey={bestCategory} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {metrics.slice(0, 4).map((key, index) => (
-                  <Bar 
-                    key={key}
-                    dataKey={key} 
-                    name={key}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]} 
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          );
-
-        case 'stackedBar':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey={bestCategory} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {metrics.slice(0, 4).map((key, index) => (
-                  <Bar 
-                    key={key}
-                    dataKey={key} 
-                    name={key}
-                    stackId="stack"
-                    fill={CHART_COLORS[index % CHART_COLORS.length]} 
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          );
-
-        case 'stackedArea':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey={bestCategory} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {metrics.slice(0, 4).map((key, index) => (
-                  <Area 
-                    key={key}
-                    type="monotone" 
-                    dataKey={key} 
-                    name={key}
-                    stackId="stack"
-                    stroke={CHART_COLORS[index % CHART_COLORS.length]} 
-                    fill={CHART_COLORS[index % CHART_COLORS.length]} 
-                    fillOpacity={0.6} 
-                  />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-          );
-
-        case 'donut':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey={metrics[0] || 'value'}
-                  nameKey={bestCategory}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={100}
-                  label={entry => entry[bestCategory] || ''}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          );
-
-        case 'treemap':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <TreemapChart data={chartData}>
-                <Treemap
-                  dataKey={metrics[0] || 'value'}
-                  ratio={4/3}
-                  stroke="#444"
-                  fill="#8884d8"
-                />
-              </TreemapChart>
-            </ResponsiveContainer>
-          );
-
-        case 'funnel':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <FunnelChart>
-                <Funnel
-                  dataKey={metrics[0] || 'value'}
-                  data={chartData}
-                  isAnimationActive
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Funnel>
-                <Tooltip />
-              </FunnelChart>
-            </ResponsiveContainer>
-          );
-
-        case 'waterfall':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey={bestCategory} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey={metrics[0] || 'value'} fill="#8884d8" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          );
-
-        case 'heatmap':
-          return (
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey={metrics[0] || 'value'} />
-                <YAxis dataKey={metrics[1] || metrics[0] || 'value'} />
-                <Tooltip />
-                <Scatter data={chartData} fill="#8884d8" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          );
-
         default:
           // Fallback to standard chart
           break;
@@ -443,7 +293,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
       case 'line':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <LineChart data={preparedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey={bestCategory} />
               <YAxis />
@@ -467,7 +317,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={preparedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey={bestCategory} />
               <YAxis />
@@ -490,7 +340,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={chartData}
+                data={preparedData}
                 dataKey={metrics[0] || 'value'}
                 nameKey={bestCategory}
                 cx="50%"
@@ -498,7 +348,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
                 outerRadius={100}
                 label={entry => entry[bestCategory] || ''}
               >
-                {chartData.map((entry, index) => (
+                {preparedData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
@@ -519,7 +369,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
               <Legend />
               <Scatter 
                 name={`${metrics[0] || 'X'} vs ${metrics[1] || metrics[0] || 'Y'}`} 
-                data={chartData} 
+                data={preparedData} 
                 fill="#8884d8" 
               />
             </ScatterChart>
@@ -529,7 +379,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
       case 'area':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
+            <AreaChart data={preparedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey={bestCategory} />
               <YAxis />
@@ -551,10 +401,159 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
           </ResponsiveContainer>
         );
 
+      case 'clusteredBar':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={preparedData} barCategoryGap="20%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey={bestCategory} />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              {metrics.slice(0, 4).map((key, index) => (
+                <Bar 
+                  key={key}
+                  dataKey={key} 
+                  name={key}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        );
+
+      case 'stackedBar':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={preparedData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey={bestCategory} />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              {metrics.slice(0, 4).map((key, index) => (
+                <Bar 
+                  key={key}
+                  dataKey={key} 
+                  name={key}
+                  stackId="stack"
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        );
+
+      case 'stackedArea':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={preparedData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey={bestCategory} />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              {metrics.slice(0, 4).map((key, index) => (
+                <Area 
+                  key={key}
+                  type="monotone" 
+                  dataKey={key} 
+                  name={key}
+                  stackId="stack"
+                  stroke={CHART_COLORS[index % CHART_COLORS.length]} 
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                  fillOpacity={0.6} 
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+
+      case 'donut':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={preparedData}
+                dataKey={metrics[0] || 'value'}
+                nameKey={bestCategory}
+                cx="50%"
+                cy="50%"
+                innerRadius={40}
+                outerRadius={100}
+                label={entry => entry[bestCategory] || ''}
+              >
+                {preparedData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+
+      case 'treemap':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <Treemap
+              data={preparedData}
+              dataKey={metrics[0] || 'value'}
+              stroke="#444"
+              fill="#8884d8"
+            />
+          </ResponsiveContainer>
+        );
+
+      case 'funnel':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <FunnelChart>
+              <Funnel
+                dataKey={metrics[0] || 'value'}
+                data={preparedData}
+                isAnimationActive
+              >
+                {preparedData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Funnel>
+              <Tooltip />
+            </FunnelChart>
+          </ResponsiveContainer>
+        );
+
+      case 'waterfall':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={preparedData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey={bestCategory} />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Bar dataKey={metrics[0] || 'value'} fill="#8884d8" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        );
+
+      case 'heatmap':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey={metrics[0] || 'value'} />
+              <YAxis dataKey={metrics[1] || metrics[0] || 'value'} />
+              <Tooltip />
+              <Scatter data={preparedData} fill="#8884d8" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        );
+
       case 'radar':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={chartData}>
+            <RadarChart data={preparedData}>
               <PolarGrid stroke="#444" />
               <PolarAngleAxis dataKey={bestCategory} stroke="#fff" />
               <PolarRadiusAxis stroke="#fff" />
@@ -573,7 +572,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ type }) => {
       default:
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={preparedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey={bestCategory} />
               <YAxis />
