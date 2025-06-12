@@ -14,9 +14,6 @@ import Dashboard from '@/components/Dashboard';
 import { useVisualization } from '@/contexts/VisualizationContext';
 
 const Analytics = () => {
-  // Change 'visualization' to 'chart' to match the available view types
-  const { currentView, setCurrentView } = useVisualization();
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
       <div className="container mx-auto py-6">
@@ -36,47 +33,55 @@ const Analytics = () => {
           </TabsContent>
           
           <TabsContent value="reports" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle>Saved Reports</CardTitle>
-                  <CardDescription>Access your previously generated reports</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>No saved reports yet. Generate and save reports from your data visualizations.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setCurrentView('chart')}
-                    className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
-                  >
-                    Create Report
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle>Scheduled Reports</CardTitle>
-                  <CardDescription>Reports that run on a schedule</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>No scheduled reports configured. Set up automated reporting for your dashboards.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant="outline" 
-                    className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
-                  >
-                    Configure Schedule
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
+            <ReportsContent />
           </TabsContent>
         </Tabs>
       </div>
+    </div>
+  );
+};
+
+const ReportsContent = () => {
+  const { setCurrentView } = useVisualization();
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle>Saved Reports</CardTitle>
+          <CardDescription>Access your previously generated reports</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>No saved reports yet. Generate and save reports from your data visualizations.</p>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentView('chart')}
+            className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+          >
+            Create Report
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle>Scheduled Reports</CardTitle>
+          <CardDescription>Reports that run on a schedule</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>No scheduled reports configured. Set up automated reporting for your dashboards.</p>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            className="border-sphere-cyan/50 hover:border-sphere-cyan hover:bg-sphere-cyan/10"
+          >
+            Configure Schedule
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
